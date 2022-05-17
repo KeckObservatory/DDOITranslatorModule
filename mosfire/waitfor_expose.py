@@ -1,0 +1,35 @@
+import BaseTranslatorFunction
+from time import sleep
+from datetime import datetime, timedelta
+import DDOIExceptions
+
+
+ktl = "This is just a stand in"
+
+class MOSFIRE_WaitForExpose(BaseTranslatorFunction):
+
+
+    def pre_condition(args, logger, cfg):
+        logger.info("No precondition")
+
+    def perform(args, logger, cfg):
+        timeout = cfg['eaitfor_expose']['timeout']
+        endat = datetime.utcnow() + timedelta(seconds=timeout)
+        logger.debug(f"Timeout is set to {timeout} seconds, timeout at {endat}")
+        sleep(1)
+        IMAGEDONEkw = ktl.cache(service='mds', keyword='IMAGEDONE')
+        READYkw = ktl.cache(service='mds', keyword='READY')
+
+        imagedone = bool(int(IMAGEDONEkw.read()))
+        mdsready = bool(int(READYkw.read()))
+        done_and_ready = imagedone and mdsready
+        while datetime.utcnow() < endat and not done_and_ready:
+            sleep(0.5)
+            imagedone = bool(int(IMAGEDONEkw.read()))
+            mdsready = bool(int(READYkw.read()))
+            done_and_ready = imagedone and mdsready
+        if not done_and_ready:
+            raise DDOIExceptions.DDOIKTLTimeoutException('Timeout exceeded on waitfor_exposure to finish')
+    
+    def post_condition(args, logger, cfg):
+        logger.info("No postcondition")

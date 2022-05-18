@@ -1,12 +1,9 @@
-from BaseTranslatorFunction import BaseTranslatorModuleFunction
-from DDOIExceptions import *
-
-
-import numpy as np
+from ddoitranslatormodule import BaseTranslatorModuleFunction
+from ddoitranslatormodule import ddoiexceptions
 
 ktl = "standin"
 
-class Expose(BaseTranslatorModuleFunction):
+class FUNCITON_NAME(BaseTranslatorModuleFunction.TranslatorModuleFunction):
 
     def __init__(self):
         super().__init__()

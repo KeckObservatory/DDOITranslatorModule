@@ -1,6 +1,5 @@
-from BaseTranslatorFunction import BaseTranslatorModuleFunction
-from DDOIExceptions import *
-
+from ddoitranslatormodule import BaseTranslatorModuleFunction
+from ddoitranslatormodule import ddoiexceptions
 import re
 from time import sleep
 
@@ -8,7 +7,7 @@ import numpy as np
 
 ktl = "standin"
 
-class Expose(BaseTranslatorModuleFunction):
+class Expose(BaseTranslatorModuleFunction.TranslatorModuleFunction):
 
     def __init__(self):
         super().__init__()
@@ -46,7 +45,7 @@ class Expose(BaseTranslatorModuleFunction):
         
         namematch = re.match('(M?CDS)(\d*)', input.strip())
         if namematch is None:
-            raise DDOIMissingArgumentException(f'Unable to parse "{args.sampmode}"')
+            raise ddoiexceptions.DDOIMissingArgumentException(f'Unable to parse "{args.sampmode}"')
         mode = {'CDS': 2, 'MCDS': 3}.get(namematch.group(1))
 
         SAMPMODEkw = ktl.cache(service='mds', keyword='SAMPMODE')

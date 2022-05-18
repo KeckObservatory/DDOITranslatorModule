@@ -1,12 +1,11 @@
-import BaseTranslatorFunction
 from time import sleep
 from datetime import datetime, timedelta
-import DDOIExceptions
-
+from ddoitranslatormodule import BaseTranslatorModuleFunction
+from ddoitranslatormodule import ddoiexceptions
 
 ktl = "This is just a stand in"
 
-class MOSFIRE_WaitForExpose(BaseTranslatorFunction):
+class MOSFIRE_WaitForExpose(BaseTranslatorModuleFunction.TranslatorModuleFunction):
 
 
     def pre_condition(args, logger, cfg):
@@ -29,7 +28,7 @@ class MOSFIRE_WaitForExpose(BaseTranslatorFunction):
             mdsready = bool(int(READYkw.read()))
             done_and_ready = imagedone and mdsready
         if not done_and_ready:
-            raise DDOIExceptions.DDOIKTLTimeoutException('Timeout exceeded on waitfor_exposure to finish')
+            raise ddoiexceptions.DDOIKTLTimeoutException('Timeout exceeded on waitfor_exposure to finish')
     
     def post_condition(args, logger, cfg):
         logger.info("No postcondition")

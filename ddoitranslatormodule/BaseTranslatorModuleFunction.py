@@ -1,9 +1,9 @@
-from DDOIExceptions import DDOIArgumentsChangedException
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException
 from logging import getLogger
 
 from deepdiff import DeepDiff
 
-class BaseTranslatorModuleFunction():
+class TranslatorModuleFunction():
     """ 
     This is the base class for all Translator Module Functions at Keck.
     """
@@ -14,7 +14,7 @@ class BaseTranslatorModuleFunction():
     @staticmethod
     def execute(args, logger=None, cfg=None):
         
-        cls = BaseTranslatorModuleFunction
+        cls = TranslatorModuleFunction
         print("exeuction")
 
         # Access the logger and pass it into each method

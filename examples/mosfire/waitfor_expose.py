@@ -13,7 +13,7 @@ class MOSFIRE_WaitForExpose(BaseTranslatorFunction):
         logger.info("No precondition")
 
     def perform(args, logger, cfg):
-        timeout = cfg['eaitfor_expose']['timeout']
+        timeout = cfg['waitfor_expose']['timeout']
         endat = datetime.utcnow() + timedelta(seconds=timeout)
         logger.debug(f"Timeout is set to {timeout} seconds, timeout at {endat}")
         sleep(1)

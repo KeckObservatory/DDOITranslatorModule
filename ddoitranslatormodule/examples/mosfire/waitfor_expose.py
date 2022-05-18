@@ -1,11 +1,11 @@
 from time import sleep
 from datetime import datetime, timedelta
-from ddoitranslatormodule import BaseTranslatorModuleFunction
+from ddoitranslatormodule import BaseFunction
 from ddoitranslatormodule import ddoiexceptions
 
 ktl = "This is just a stand in"
 
-class MOSFIRE_WaitForExpose(BaseTranslatorModuleFunction.TranslatorModuleFunction):
+class MOSFIRE_WaitForExpose(BaseFunction.TranslatorModuleFunction):
 
 
     def pre_condition(args, logger, cfg):

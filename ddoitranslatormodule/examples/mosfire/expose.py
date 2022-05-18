@@ -1,4 +1,4 @@
-from ddoitranslatormodule import BaseTranslatorModuleFunction
+from ddoitranslatormodule import BaseFunction
 from ddoitranslatormodule import ddoiexceptions
 import re
 from time import sleep
@@ -7,7 +7,7 @@ import numpy as np
 
 ktl = "standin"
 
-class Expose(BaseTranslatorModuleFunction.TranslatorModuleFunction):
+class Expose(BaseFunction.TranslatorModuleFunction):
 
     def __init__(self):
         super().__init__()

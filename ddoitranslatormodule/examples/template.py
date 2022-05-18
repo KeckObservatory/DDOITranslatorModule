@@ -1,9 +1,9 @@
-from ddoitranslatormodule import BaseTranslatorModuleFunction
+from ddoitranslatormodule import BaseFunction
 from ddoitranslatormodule import ddoiexceptions
 
 ktl = "standin"
 
-class FUNCITON_NAME(BaseTranslatorModuleFunction.TranslatorModuleFunction):
+class FUNCITON_NAME(BaseFunction.TranslatorModuleFunction):
 
     def __init__(self):
         super().__init__()

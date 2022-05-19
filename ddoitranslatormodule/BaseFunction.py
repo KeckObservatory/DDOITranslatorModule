@@ -11,59 +11,58 @@ class TranslatorModuleFunction():
     # If True, then the abort_execution method may be invoked
     abortable = False
 
-    @staticmethod
-    def execute(args, logger=None, cfg=None):
-        
-        cls = TranslatorModuleFunction
-        print("exeuction")
+    @classmethod
+    def execute(cls, args, logger=None, cfg=None):
 
         # Access the logger and pass it into each method
         if logger is None:
             logger = getLogger("")
-        if cfg is None:
-            cfg = cls._load_config("")
+        # if cfg is None:
+        #     cfg = cls._load_config("")
         # Store a copy of the initial args
         initial_args = args.copy()
         print("Executing!")
         
+        print(dir(cls.pre_condition))
         # Check the pre-condition
-        if cls.pre_condition(args, logger):
+        if cls.pre_condition(args, logger, cfg):
         # Make sure that the pre-condition did not alter the arguments
             args_diff = cls._diff_args(args, initial_args)
             if args_diff is not None:
                 raise DDOIArgumentsChangedException(f"helpful message {args_diff}")
             
-            cls.perform(args, logger)
+            cls.perform(args, logger, cfg)
             args_diff = cls._diff_args(args, initial_args)
             if args_diff is not None:
                 raise DDOIArgumentsChangedException(f"helpful message {args_diff}")
             
-            pst = cls.post_condition(args, logger)
+            pst = cls.post_condition(args, logger, cfg)
             args_diff = cls._diff_args(args, initial_args)
             if args_diff is not None:
                 raise DDOIArgumentsChangedException(f"helpful message {args_diff}")
             return pst
         return False
         
-
-    def pre_condition(args, logger, cfg):
+    @classmethod
+    def pre_condition(cls, args, logger, cfg):
       
       # pre-checks go here
       raise NotImplementedError()
           
-  
-    def perform(args, logger, cfg):
+    @classmethod
+    def perform(cls, args, logger, cfg):
     
         # This is where the bulk of instrument code lives
         raise NotImplementedError()
     
-    
-    def post_condition(args, logger, cfg):
+    @classmethod
+    def post_condition(cls, args, logger, cfg):
         
         # post-checks go here
         raise NotImplementedError()
-        
-    def abort_execution(args, logger, cfg):
+
+    @classmethod
+    def abort_execution(cls, args, logger, cfg):
 
         # Code to abort execution goes here
         raise NotImplementedError()
@@ -89,3 +88,6 @@ class TranslatorModuleFunction():
     
     def _load_config():
         return
+
+    def copy(arg):
+        print()

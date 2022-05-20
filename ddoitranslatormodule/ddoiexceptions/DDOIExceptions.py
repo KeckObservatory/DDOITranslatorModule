@@ -1,24 +1,14 @@
 class DDOIArgumentsChangedException(Exception):
-
-    def __init__(self):
-        super(self)
+    pass
 
 class DDOIKTLTimeoutException(Exception):
-
-    def __init__(self):
-        super(self)
+    pass
 
 class DDOIMissingArgumentException(Exception):
-
-    def __init__(self):
-        super(self)
+    pass
 
 class DDOISubsystemInactiveExcpetion(Exception):
-
-    def __init__(self):
-        super(self)
+    pass
 
 class DDOISubsystemDisabledException(Exception):
-
-    def __init__(self):
-        super(self)
+    pass

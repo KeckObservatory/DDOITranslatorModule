@@ -1,18 +1,20 @@
-from ddoitranslatormodule import BaseFunction
-from ddoitranslatormodule import ddoiexceptions
+from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
+
+from ddoitranslatormodule.DDOIExceptions import *
 import re
 from time import sleep
 
 import numpy as np
 
-ktl = "standin"
+import ktl
 
-class Expose(BaseFunction.TranslatorModuleFunction):
+class Expose(TranslatorModuleFunction):
 
     def __init__(self):
         super().__init__()
 
-    def pre_condition(args, logger, cfg):
+    @classmethod
+    def pre_condition(cls, args, logger, cfg):
         # Check FCS
         activekw = ktl.cache(keyword='ACTIVE', service='mfcs')
         active = bool(activekw.read())
@@ -27,8 +29,8 @@ class Expose(BaseFunction.TranslatorModuleFunction):
 
         return True
 
-
-    def perform(args, logger, cfg):
+    @classmethod
+    def perform(cls, args, logger, cfg):
         
         # Set the exposure time
         ITIMEkw = ktl.cache(service='mds', keyword='ITIME')
@@ -45,7 +47,7 @@ class Expose(BaseFunction.TranslatorModuleFunction):
         
         namematch = re.match('(M?CDS)(\d*)', input.strip())
         if namematch is None:
-            raise ddoiexceptions.DDOIMissingArgumentException(f'Unable to parse "{args.sampmode}"')
+            raise DDOIMissingArgumentException(f'Unable to parse "{args.sampmode}"')
         mode = {'CDS': 2, 'MCDS': 3}.get(namematch.group(1))
 
         SAMPMODEkw = ktl.cache(service='mds', keyword='SAMPMODE')
@@ -95,7 +97,7 @@ class Expose(BaseFunction.TranslatorModuleFunction):
 
         return
 
-
-    def post_condition(args, logger, cfg):
+    @classmethod
+    def post_condition(cls, args, logger, cfg):
         logger.debug("No post-condition for expose defined")
         return True

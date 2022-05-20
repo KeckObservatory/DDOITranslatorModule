@@ -1,17 +1,20 @@
+#! /kroot/rel/default/bin/kpython
+
 from time import sleep
 from datetime import datetime, timedelta
-from ddoitranslatormodule import BaseFunction
-from ddoitranslatormodule import ddoiexceptions
+from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
+from ddoitranslatormodule.DDOIExceptions import *
 
-ktl = "This is just a stand in"
+import ktl
 
-class MOSFIRE_WaitForExpose(BaseFunction.TranslatorModuleFunction):
+class MOSFIRE_WaitForExpose(TranslatorModuleFunction):
 
-
-    def pre_condition(args, logger, cfg):
+    @classmethod
+    def pre_condition(cls, args, logger, cfg):
         logger.info("No precondition")
 
-    def perform(args, logger, cfg):
+    @classmethod
+    def perform(cls, args, logger, cfg):
         timeout = cfg['waitfor_expose']['timeout']
         endat = datetime.utcnow() + timedelta(seconds=timeout)
         logger.debug(f"Timeout is set to {timeout} seconds, timeout at {endat}")
@@ -28,7 +31,8 @@ class MOSFIRE_WaitForExpose(BaseFunction.TranslatorModuleFunction):
             mdsready = bool(int(READYkw.read()))
             done_and_ready = imagedone and mdsready
         if not done_and_ready:
-            raise ddoiexceptions.DDOIKTLTimeoutException('Timeout exceeded on waitfor_exposure to finish')
+            raise DDOIKTLTimeoutException('Timeout exceeded on waitfor_exposure to finish')
     
-    def post_condition(args, logger, cfg):
+    @classmethod
+    def post_condition(cls, args, logger, cfg):
         logger.info("No postcondition")

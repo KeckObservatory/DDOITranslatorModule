@@ -36,7 +36,7 @@ Quickstart
 
 What follows is a short example of how to create a single translator module
 function. For more information on what specifically should be in a single
-function, see the Module Design section.
+function, see the Module Design section (coming soon).
 
 First, import the required pieces from this package
 

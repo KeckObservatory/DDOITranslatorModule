@@ -1,7 +1,7 @@
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException
 from logging import getLogger
 
-from deepdiff import DeepDiff
+import copy
 
 class TranslatorModuleFunction():
     """ 
@@ -20,7 +20,7 @@ class TranslatorModuleFunction():
         # if cfg is None:
         #     cfg = cls._load_config("")
         # Store a copy of the initial args
-        initial_args = args.copy()
+        initial_args = copy.deepcopy(args)
         print(f"Executing {__name__}")
         
         # Check the pre-condition
@@ -28,17 +28,17 @@ class TranslatorModuleFunction():
         # Make sure that the pre-condition did not alter the arguments
             args_diff = cls._diff_args(args, initial_args)
             if args_diff is not None:
-                raise DDOIArgumentsChangedException(f"helpful message {args_diff}")
+                raise DDOIArgumentsChangedException(f"Arguments changed after executing pre-condition: {args_diff}")
             
             cls.perform(args, logger, cfg)
             args_diff = cls._diff_args(args, initial_args)
             if args_diff is not None:
-                raise DDOIArgumentsChangedException(f"helpful message {args_diff}")
+                raise DDOIArgumentsChangedException(f"Arguments changed after executing perform: {args_diff}")
             
             pst = cls.post_condition(args, logger, cfg)
             args_diff = cls._diff_args(args, initial_args)
             if args_diff is not None:
-                raise DDOIArgumentsChangedException(f"helpful message {args_diff}")
+                raise DDOIArgumentsChangedException(f"Arguments changed after executing post-condition: {args_diff}")
             return pst
         return False
         
@@ -83,10 +83,8 @@ class TranslatorModuleFunction():
     
     def _diff_args(args1, args2):
 
-        return DeepDiff(args1, args2)
+        # Deep check if args1 == args2. This code may not be sufficient
+        return args1 == args2
     
     def _load_config():
         return
-
-    def copy(arg):
-        print()

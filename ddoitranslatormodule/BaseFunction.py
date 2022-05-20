@@ -21,9 +21,8 @@ class TranslatorModuleFunction():
         #     cfg = cls._load_config("")
         # Store a copy of the initial args
         initial_args = args.copy()
-        print("Executing!")
+        print(f"Executing {__name__}")
         
-        print(dir(cls.pre_condition))
         # Check the pre-condition
         if cls.pre_condition(args, logger, cfg):
         # Make sure that the pre-condition did not alter the arguments

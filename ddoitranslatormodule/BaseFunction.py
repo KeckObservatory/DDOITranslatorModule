@@ -13,12 +13,39 @@ class TranslatorModuleFunction():
 
     @classmethod
     def execute(cls, args, logger=None, cfg=None):
+        """Carries out this function in its entirety (pre and post conditions
+           included)
+
+        Parameters
+        ----------
+        args : dict
+            The OB in dictionary form
+        logger : DDOILoggerClient, optional
+            The DDOILoggerClient that should be used. If none is provided, defaults to
+            a generic name specified in the config, by default None
+        cfg : filepath, optional
+            File path to the config that should be used, by default None
+
+        Returns
+        -------
+        bool
+            True if execution was sucessful, False otherwise
+
+        Raises
+        ------
+        DDOIArgumentsChangedException
+            If any changes to the input arguments are detected, this exception
+            is raised. Code within a TranslatorModuleFunction should **NOT**
+            change the input arguments
+        """
 
         # Access the logger and pass it into each method
         if logger is None:
             logger = getLogger("")
-        # if cfg is None:
-        #     cfg = cls._load_config("")
+        
+        if cfg is None:
+            cfg = cls._load_config("./module.ini")
+        
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
         print(f"Executing {__name__}")

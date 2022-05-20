@@ -1,23 +1,24 @@
-from ddoitranslatormodule import BaseFunction
-from ddoitranslatormodule import ddoiexceptions
+#! /kroot/rel/default/bin/kpython
 
-ktl = "standin"
+import ktl
 
-class FUNCITON_NAME(BaseFunction.TranslatorModuleFunction):
+from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
 
+class FUNCTION_NAME(TranslatorModuleFunction):
     def __init__(self):
         super().__init__()
 
-    def pre_condition(args, logger, cfg):
-
+    @classmethod
+    def pre_condition(cls, args, logger, cfg):
+        print("Pre condition")
         return True
 
-
-    def perform(args, logger, cfg):
-        
+    @classmethod
+    def perform(cls, args, logger, cfg):
+        print("Perform")
         return True
-
-
-    def post_condition(args, logger, cfg):
-        logger.debug("No post-condition for expose defined")
+    
+    @classmethod
+    def post_condition(cls, args, logger, cfg):
+        print("Post condition")
         return True

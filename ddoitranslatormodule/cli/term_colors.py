@@ -1,10 +1,13 @@
 class term_colors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
+    """ANSI codes for highlighting code on the command line. Add in a code
+    before the text you want highlighted, and the END_COLOR after
+    """
+    PURPLE = '\033[95m'
+    LIGHT_PURPLE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    END_COLOR = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'

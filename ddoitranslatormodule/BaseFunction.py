@@ -3,6 +3,8 @@ from logging import getLogger
 
 import copy
 
+help = ""
+
 class TranslatorModuleFunction():
     """ 
     This is the base class for all Translator Module Functions at Keck.
@@ -10,6 +12,8 @@ class TranslatorModuleFunction():
     
     # If True, then the abort_execution method may be invoked
     abortable = False
+    help_string = help
+    min_args = {}
 
     @classmethod
     def execute(cls, args, logger=None, cfg=None):
@@ -107,7 +111,7 @@ class TranslatorModuleFunction():
             logger.error("Failed to abort. abort_execution() is not enabled")
         # Code for shutting everything down, even while perform is operating
         raise NotImplementedError()
-    
+
     def _diff_args(args1, args2):
 
         # Deep check if args1 == args2. This code may not be sufficient

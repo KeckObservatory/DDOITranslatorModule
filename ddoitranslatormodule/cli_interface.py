@@ -10,6 +10,23 @@ from pathlib import Path
 from .cli.FunctionTree import FunctionTree
 
 def get_functions(cfg):
+    """Recursively searches through the function directory specified in cfg and
+    returns a list of dictionaries containing information about those functions
+
+    Parameters
+    ----------
+    cfg : dict or dict-like
+        Parsed configuration file
+
+    Returns
+    -------
+    list of dict
+        All of the functions in the specified directory that match the given
+        prefix. Each dict contains:
+        module_path: string that can be used to import the found function
+        abs_path: the absolute path to that function
+        list: the module path as a list of strings, rather than joined with .
+    """
     
     # Get functions directory
     func_dir = Path(__file__).parent / cfg['functions_dir']
@@ -43,6 +60,18 @@ def get_functions(cfg):
     return func_dicts
 
 def get_help_string(module_path):
+    """Retrieves the help string from a given module, if there is one
+
+    Parameters
+    ----------
+    module_path : str
+        import string for the module in question (e.g. package.subpackage.mod)
+
+    Returns
+    -------
+    str
+        The help string found if there is one, otherwise None
+    """
     try:
         mod = importlib.import_module(module_path)
         print("I didn't error!")
@@ -51,11 +80,19 @@ def get_help_string(module_path):
             return help
         else:
             print(f"No help_string attribute found in {module_path}")
+            return None
     except:
         print(f"Error importing {module_path}")
         return 
 
 def get_parser():
+    """Gets an argument parser object from the command line
+
+    Returns
+    -------
+    ArgumentParser
+        The ArgumentParser object
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-l', '--list', dest='list', action='store_true', help="Display all functions availible from this translator")

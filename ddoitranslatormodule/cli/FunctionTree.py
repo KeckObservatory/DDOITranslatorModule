@@ -113,7 +113,7 @@ class FunctionTree():
                 for child in root.children:
                     self.print_tree(root=child, indent="\t" + indent)
             else:
-                print(f"{indent} {term_colors.OKGREEN}{root.content}{term_colors.ENDC}")
+                print(f"{indent} {term_colors.GREEN}{root.content}{term_colors.END_COLOR}")
         else:
             self.print_tree(root=self.root)
 

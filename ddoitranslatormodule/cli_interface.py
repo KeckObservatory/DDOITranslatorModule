@@ -12,9 +12,19 @@ from operator import mod
 from pathlib import Path
 from posixpath import split
 
+class term_colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 def get_functions(cfg):
-    # Find the package path with all the functions in it
-    # collect each one into a ... dict? nested correctly?
     
     # Get functions directory
     func_dir = Path(__file__).parent / cfg['functions_dir']
@@ -46,49 +56,6 @@ def get_functions(cfg):
                 pass
 
     return func_dicts
-
-# def print_functions_tree(cfg):
-#     """Prints the functions availible in this module in nested tree form
-
-#     Parameters
-#     ----------
-#     cfg : dict
-#         config file containing the function prefix
-#     """
-#     func_dir = Path(__file__).parent / 'functions'
-#     print(get_function_tree_str(func_dir, cfg))
-
-# def get_function_tree_str(directory, cfg, str = "", prefix = ""):
-#     """Generates a string representation of the functions availible within a given
-#     directory
-
-#     Parameters
-#     ----------
-#     directory : pathlib.Path
-#         root of the tree
-#     cfg : dict
-#         config containing function prefix
-#     str : str, optional
-#         starting string, by default ""
-#     prefix : str, optional
-#         indentation prefix, by default ""
-
-#     Returns
-#     -------
-#     str
-#         A string Tree representation of all availible functions
-#     """
-
-#     dirs = []
-#     for d in directory.iterdir():
-#         if d.is_dir() and not d.match('__*__'):
-#             dirs.append(d)
-#         elif d.is_file() and d.match(cfg['function_prefix'] + "*.py"):
-#             str += prefix + d.stem + "\n"
-#     for d in dirs:
-#         str += "\n" + prefix + d.stem + "\n"
-#         str += get_function_tree_str(directory/d, cfg, "", prefix + "\t")
-#     return str
 
 def get_help_string(module_path):
     try:
@@ -163,13 +130,12 @@ class FunctionTree():
     def print_tree(self, root=None, indent=""):
         if root:
             if root.is_not_leaf() > 0:
-                print("\n" + indent + root.content)
+                print(f"\n{indent}{root.content}")
                 for child in root.children:
                     self.print_tree(root=child, indent="\t" + indent)
             else:
-                print(indent + "*" + root.content)
+                print(f"{indent} {term_colors.OKGREEN}{root.content}{term_colors.ENDC}")
         else:
-            print("* = executable function")
             self.print_tree(root=self.root)
 
     def parse_function_list(self, function_list):
@@ -197,7 +163,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-l', '--list', dest='list', action='store_true', help="Display all functions availible from this translator")
-    parser.add_argument('function', nargs='*')
+    parser.add_argument('function', nargs='*', help="Function to invoke. [function ... ] [arguments ...]")
 
     return parser.parse_args()
 
@@ -218,10 +184,19 @@ def main():
     if args.list:
         tree.print_tree()
 
-    # Use tree to figure out when function name ends and arguments begin
-    module_path, arguments, leaf = tree.parse_function_list([__package__, cfg['functions_dir']] + args.function)
-    print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
-    print(f"Arguments: {arguments}")
+    if len(args.function) > 0:
+        # Use tree to figure out when function name ends and arguments begin
+        module_path, arguments, leaf = tree.parse_function_list([__package__, cfg['functions_dir']] + args.function)
+        module = importlib.import_module(module_path)
+        if not leaf:
+            print('Indicated function is a directory, not a file. Exiting...')
+            return
+        if hasattr(module, "execute"):
+            module.execute(arguments)
+        else:
+            print("Module does not contain an `execute` function. Exiting...")
+        print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
+        print(f"Arguments: {arguments}")
 
 
     

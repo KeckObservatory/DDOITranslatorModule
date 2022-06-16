@@ -1,8 +1,14 @@
 from .term_colors import term_colors
 
+
 class FunctionTree():
+    """Tree that represents the directory structure for the functions in a
+    translator module
+    """
 
     class TreeNode():
+        """Inner class for the FunctionTree, represents a node in the tree
+        """
 
         def __init__(self, parent=None, content=""):
             
@@ -11,12 +17,40 @@ class FunctionTree():
             self.content = content
 
         def add_child(self, child):
+            """Adds a child to this node
+
+            Parameters
+            ----------
+            child : TreeNode
+                Node that should be added as a child to this node
+            """
             self.children.append(child)
 
         def is_not_leaf(self):
+            """Determines if this node is a leaf or an inner node
+
+            Returns
+            -------
+            bool
+                True if the node is an inner node, false if it is a leaf
+            """
             return len(self.children) > 0
 
         def children_contain_element(self, el):
+            """Determines if the contents of the children of this node contain a
+            given element
+
+            Parameters
+            ----------
+            el : str
+                Element to look for in the contents of this node's children
+
+            Returns
+            -------
+            bool
+                True if the contents of this node's children contain the given
+                element
+            """
             for child in self.children:
                 if child.content == el:
                     return child
@@ -26,6 +60,18 @@ class FunctionTree():
         self.root = self.TreeNode(content=root)
 
     def add_list_to_tree(self, arr, root_node=None):
+        """Takes in a file path as an array of strings and adds the nodes to the
+        tree in the correct location, creating nodes as needed
+
+        Parameters
+        ----------
+        arr : list or iterable
+            list of strings to add, where each succesive list element is a child
+            of the one before
+        root_node : TreeNode, optional
+            Node to start adding the list too. If none, uses this tree's root,
+            which is typical when invoked externally. by default None
+        """
         # If there's nothing in the array, there's nothing to do
         if len(arr) < 1:
             return
@@ -51,6 +97,16 @@ class FunctionTree():
 
 
     def print_tree(self, root=None, indent=""):
+        """Prints the tree to terminal, marking leaf nodes (in this case,
+        functions) in green
+
+        Parameters
+        ----------
+        root : TreeNode, optional
+            Node to start printing at. If not specified, uses this tree's root
+        indent : str, optional
+            indent used recursively. Should not be set by the use
+        """
         if root:
             if root.is_not_leaf() > 0:
                 print(f"\n{indent}{root.content}")
@@ -62,6 +118,23 @@ class FunctionTree():
             self.print_tree(root=self.root)
 
     def parse_function_list(self, function_list):
+        """Takes in a list of strings that contains both a path to a function,
+        and also possible arguments for that function (in the form):
+
+            [func_path1, func_path2, ... func_pathN, arg1, arg2, ... argN]
+
+        Parameters
+        ----------
+        function_list : list
+            list of strings
+
+        Returns
+        -------
+        (str, list, list)
+            string representing the module path (e.g. what would be imported),
+            the list of arguments used to create that string, and the arguments
+            at the end of the function path
+        """
         node = self.root
         split_point = 0
         func_path = function_list

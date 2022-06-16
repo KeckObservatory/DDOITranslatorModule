@@ -1,9 +1,3 @@
-# Parse the directory tree to find all classes that extend the translator module
-# function
-
-# Build that into a Argument Parser
-
-# Create a method that executes those translator module functions
 import argparse
 import importlib
 from pathlib import Path
@@ -30,32 +24,36 @@ def get_functions(cfg):
     
     # Get functions directory
     func_dir = Path(__file__).parent / cfg['functions_dir']
+
     # Get all functions
     functions = [i for i in func_dir.rglob(f'{cfg["function_prefix"]}*.py')]
+    
+    # Empty list for functions to fill
     func_dicts = []
-    func_tree = {}
+    
     for f in functions:
+        
         # Get the absolute path, everything before the functions directory
         levels = str(f).split(str(func_dir))[-1]
+        
         # Split on / to get modules/submodules, and remove the first empty one
         levels = levels.split('/')[1:]
+        
         # Add in the package itself
         module_path_list = [__package__] + [cfg['functions_dir']] + levels
+
+        # String off the '.py' from the last element
         module_path_list[-1] = module_path_list[-1][:-3]
+        
         # Form into an import string
         module_path = ".".join(module_path_list)
-        # Strip off the '.py. from the end
-        # module_path = module_path[:-3]
+        
         res = {
             "module_path" : module_path,
             "abs_path" : str(f),
             "list" : module_path_list
         }
         func_dicts.append(res)
-
-        for item in module_path_list:
-            if hasattr(func_tree, item):
-                pass
 
     return func_dicts
 
@@ -72,9 +70,9 @@ def get_help_string(module_path):
     str
         The help string found if there is one, otherwise None
     """
+    
     try:
         mod = importlib.import_module(module_path)
-        print("I didn't error!")
         help = getattr(mod, 'help_string')
         if help:
             return help

@@ -3,6 +3,7 @@ from logging import getLogger
 
 import copy
 
+
 class TranslatorModuleFunction():
     """ 
     This is the base class for all Translator Module Functions at Keck.
@@ -51,24 +52,28 @@ class TranslatorModuleFunction():
         print(f"Executing {__name__}")
         
         # Check the pre-condition
-        if cls.pre_condition(args, logger, cfg):
+        if not cls.pre_condition(args, logger, cfg):
+            return False
+
         # Make sure that the pre-condition did not alter the arguments
-            args_diff = cls._diff_args(args, initial_args)
-            if args_diff is not None:
-                raise DDOIArgumentsChangedException(f"Arguments changed after executing pre-condition: {args_diff}")
-            
-            cls.perform(args, logger, cfg)
-            args_diff = cls._diff_args(args, initial_args)
-            if args_diff is not None:
-                raise DDOIArgumentsChangedException(f"Arguments changed after executing perform: {args_diff}")
-            
-            pst = cls.post_condition(args, logger, cfg)
-            args_diff = cls._diff_args(args, initial_args)
-            if args_diff is not None:
-                raise DDOIArgumentsChangedException(f"Arguments changed after executing post-condition: {args_diff}")
-            return pst
-        return False
-        
+        args_diff = cls._diff_args(args, initial_args)
+        if args_diff is not None:
+            raise DDOIArgumentsChangedException(
+                f"Arguments changed after executing pre-condition: {args_diff}")
+
+        cls.perform(args, logger, cfg)
+        args_diff = cls._diff_args(args, initial_args)
+        if args_diff is not None:
+            raise DDOIArgumentsChangedException(
+                f"Arguments changed after executing perform: {args_diff}")
+
+        pst = cls.post_condition(args, logger, cfg)
+        args_diff = cls._diff_args(args, initial_args)
+        if args_diff is not None:
+            raise DDOIArgumentsChangedException(
+                f"Arguments changed after executing post-condition: {args_diff}")
+        return pst
+
     @classmethod
     def pre_condition(cls, args, logger, cfg):
       
@@ -92,8 +97,7 @@ class TranslatorModuleFunction():
 
         # Code to abort execution goes here
         raise NotImplementedError()
-    
-    
+
     @classmethod
     def abort(cls, args, logger=None, cfg=None):
         if logger is None:
@@ -105,13 +109,18 @@ class TranslatorModuleFunction():
             cls.abort_execution(args, logger, cfg)
         else:
             logger.error("Failed to abort. abort_execution() is not enabled")
+
         # Code for shutting everything down, even while perform is operating
         raise NotImplementedError()
-    
+
+    @staticmethod
     def _diff_args(args1, args2):
 
         # Deep check if args1 == args2. This code may not be sufficient
         return args1 == args2
-    
-    def _load_config():
-        return
+
+    @classmethod
+    def add_to_argparser(cls):
+        raise NotImplementedError()
+
+

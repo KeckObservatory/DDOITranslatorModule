@@ -3,6 +3,7 @@ import importlib
 from pathlib import Path
 from .cli.FunctionTree import FunctionTree
 
+
 def get_functions(cfg):
     """Recursively searches through the function directory specified in cfg and
     returns a list of dictionaries containing information about those functions
@@ -57,6 +58,7 @@ def get_functions(cfg):
 
     return func_dicts
 
+
 def get_help_string(module_path):
     """Retrieves the help string from a given module, if there is one
 
@@ -83,6 +85,7 @@ def get_help_string(module_path):
         print(f"Error importing {module_path}")
         return 
 
+
 def get_parser():
     """Gets an argument parser object from the command line
 
@@ -96,11 +99,13 @@ def get_parser():
     parser.add_argument('-l', '--list', dest='list', action='store_true', help="Display all functions availible from this translator")
     parser.add_argument('function', nargs='*', help="Function to invoke. [function ... ] [arguments ...]")
 
-    return parser.parse_args()
+    return parser
+
 
 def main():
 
-    args = get_parser()
+    parser = get_parser()
+    args = parser.parse_known_args()
 
     cfg = {
         "function_prefix" : "func",
@@ -123,11 +128,12 @@ def main():
             print('Indicated function is a directory, not a file. Exiting...')
             return
         if hasattr(module, "execute"):
-            module.execute(arguments)
+            args = module.add_to_argparser(cfg, parser)
+            module.execute(args)
         else:
             print("Module does not contain an `execute` function. Exiting...")
         print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
         print(f"Arguments: {arguments}")
 
 
-    
+

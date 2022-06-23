@@ -5,6 +5,7 @@ import copy
 
 help = ""
 
+
 class TranslatorModuleFunction():
     """ 
     This is the base class for all Translator Module Functions at Keck.
@@ -122,8 +123,8 @@ class TranslatorModuleFunction():
         # Deep check if args1 == args2. This code may not be sufficient
         return args1 == args2
 
-    @classmethod
-    def add_to_argparser(cls):
+    @staticmethod
+    def add_to_argparser(cfg, parser):
         raise NotImplementedError()
 
 

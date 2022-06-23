@@ -123,8 +123,8 @@ class TranslatorModuleFunction():
         # Deep check if args1 == args2. This code may not be sufficient
         return args1 == args2
 
-    @staticmethod
-    def add_cmdline_args(cfg, parser):
+    @classmethod
+    def add_cmdline_args(cls, cfg, parser):
         # add: return super().add_cmdline_args(cfg, parser) to the end of extended method
         parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
                             help=('show this help message and exit'))

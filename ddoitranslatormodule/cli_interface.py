@@ -94,10 +94,12 @@ def get_parser():
     ArgumentParser
         The ArgumentParser object
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Translator wrapper', add_help=False)
 
-    parser.add_argument('-l', '--list', dest='list', action='store_true', help="Display all functions availible from this translator")
-    parser.add_argument('function', nargs='*', help="Function to invoke. [function ... ] [arguments ...]")
+    parser.add_argument('-l', '--list', dest='list', action='store_true',
+                        help="Display all functions availible from this translator")
+    parser.add_argument('function', nargs='*',
+                        help="Function to invoke. [function ... ] [arguments ...]")
 
     return parser
 
@@ -108,8 +110,8 @@ def main():
     args = parser.parse_known_args()
 
     cfg = {
-        "function_prefix" : "func",
-        "functions_dir" : "functions"
+        "function_prefix": "func",
+        "functions_dir": "functions"
     }
     
     funcs = get_functions(cfg)
@@ -122,7 +124,8 @@ def main():
 
     if len(args.function) > 0:
         # Use tree to figure out when function name ends and arguments begin
-        module_path, arguments, leaf = tree.parse_function_list([__package__, cfg['functions_dir']] + args.function)
+        module_path, arguments, leaf = tree.parse_function_list(
+            [__package__, cfg['functions_dir']] + args.function)
         module = importlib.import_module(module_path)
         if not leaf:
             print('Indicated function is a directory, not a file. Exiting...')

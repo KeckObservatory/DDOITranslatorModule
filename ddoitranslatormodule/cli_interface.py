@@ -131,7 +131,7 @@ def main():
             print('Indicated function is a directory, not a file. Exiting...')
             return
         if hasattr(module, "execute"):
-            args = module.add_to_argparser(cfg, parser)
+            args = module.add_cmdline_args(cfg, parser)
             module.execute(args)
         else:
             print("Module does not contain an `execute` function. Exiting...")

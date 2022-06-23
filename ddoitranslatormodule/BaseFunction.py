@@ -1,5 +1,6 @@
-from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments
 from logging import getLogger
+from argparse import Namespace
 
 import copy
 
@@ -43,6 +44,11 @@ class TranslatorModuleFunction():
             is raised. Code within a TranslatorModuleFunction should **NOT**
             change the input arguments
         """
+        if type(args) == Namespace:
+            args = vars(args)
+        elif type(args) != dict:
+            msg = "argument type must be either Dict or Argparser.Namespace"
+            raise DDOIInvalidArguments(msg)
 
         # Access the logger and pass it into each method
         if logger is None:

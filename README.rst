@@ -90,3 +90,30 @@ check if the system is online, the perform method could command the filter wheel
 to rotate, and the post condition could verify that the correct filter is in
 place. It does not always makes sense for there to be a pre and post condition, 
 if that is the case, then simply ``return True``. 
+
+Module Structure
+----------------
+The instructions above only describe how to make a single translator function,
+not the whole collection of commands needed to control an entire subsystem. This
+section will summarize how the whole module should be structured, what files are
+required, and how the module should be used.
+
+
+    | MODULE_NAME
+    | ├── module_name          
+    | │   ├── __init__.py
+    | │   └── subsection1
+    | │   │   └── __init__.py
+    | │   │   └── sub1functionA.py
+    | │   │   └── sub1functionB.py
+    | │   │   └── sub1functionC.py
+    | │   └── subsection2
+    | │   │   └── __init__.py
+    | │   │   └── sub2functionA.py
+    | │   │   └── sub2functionB.py
+    | │   │   └── sub2functionC.py
+    | ├── LICENCE.txt
+    | ├── .gitignore          
+    | ├── requirements.txt
+    | ├── setup.py
+    | ├── __init__.py

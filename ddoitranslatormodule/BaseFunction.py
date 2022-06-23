@@ -3,6 +3,7 @@ from logging import getLogger
 
 import copy
 
+help = ""
 
 class TranslatorModuleFunction():
     """ 
@@ -11,6 +12,8 @@ class TranslatorModuleFunction():
     
     # If True, then the abort_execution method may be invoked
     abortable = False
+    help_string = help
+    min_args = {}
 
     @classmethod
     def execute(cls, args, logger=None, cfg=None):

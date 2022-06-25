@@ -130,10 +130,20 @@ class TranslatorModuleFunction():
         return args1 == args2
 
     @classmethod
-    def add_cmdline_args(cls, cfg, parser):
-        # add: return super().add_cmdline_args(cfg, parser) to the end of extended method
+    def add_cmdline_args(cls, parser, cfg):
+        """
+        The arguments to add to the command line interface.
+
+        :param parser: <ArgumentParser>
+            the instance of the parser to add the arguments to .
+        :param cfg: <str> filepath, optional
+            File path to the config that should be used, by default None
+
+        :return: <ArgumentParser>
+        """
+        # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
         parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
-                            help=('show this help message and exit'))
+                            help='show this help message and exit')
         args = parser.parse_args()
 
         return args

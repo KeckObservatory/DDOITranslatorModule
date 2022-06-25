@@ -27,6 +27,15 @@ class DDOIPreConditionNotRun(Exception):
         return f'{self.message}'
 
 
+class DDOIArgumentsNotAdded(Exception):
+    def __init__(self, class_name):
+        self.message = f"Parser Arguments were not added for {class_name}"
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.message}'
+
+
 class DDOIInvalidArguments(Exception):
     pass
 

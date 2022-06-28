@@ -9,7 +9,7 @@ import os
 help = ""
 
 
-class TranslatorModuleFunction():
+class TranslatorModuleFunction:
     """ 
     This is the base class for all Translator Module Functions at Keck.
     """
@@ -46,7 +46,6 @@ class TranslatorModuleFunction():
             is raised. Code within a TranslatorModuleFunction should **NOT**
             change the input arguments
         """
-        print(f"CFG {cfg}")
         if type(args) == Namespace:
             args = vars(args)
         elif type(args) != dict:
@@ -57,15 +56,13 @@ class TranslatorModuleFunction():
         if logger is None:
             logger = getLogger("")
 
-        print('what---')
         if cfg:
             # cfg_path = os.path.dirname(os.path.abspath(__file__))
             # cfg = cls._load_config(f"{cfg_path}/{cfg}")
             cfg = cls._load_config(f"{cfg}")
 
         # Store a copy of the initial args
-        initial_args = copy.deepcopy(args)
-        print(f"Executing {__name__}")
+        # initial_args = copy.deepcopy(args)
         
         # Check the pre-condition
         if not cls.pre_condition(args, logger, cfg):

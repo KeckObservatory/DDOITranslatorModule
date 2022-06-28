@@ -20,7 +20,7 @@ class DDOISubsystemDisabledException(Exception):
 
 class DDOIPreConditionNotRun(Exception):
     def __init__(self, class_name):
-        self.message = f"Precondition was not for {class_name}"
+        self.message = f"Precondition was not run for {class_name}"
         super().__init__(self.message)
 
     def __str__(self):

@@ -62,8 +62,8 @@ class TranslatorModuleFunction:
             cfg = cls._load_config(f"{cfg}")
 
         # Store a copy of the initial args
-        # initial_args = copy.deepcopy(args)
-        
+        initial_args = copy.deepcopy(args)
+
         # Check the pre-condition
         if not cls.pre_condition(args, logger, cfg):
             return False

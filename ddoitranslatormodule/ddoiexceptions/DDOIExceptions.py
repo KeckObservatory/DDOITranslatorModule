@@ -44,7 +44,7 @@ class DDOIKTLTimeOut(Exception):
     pass
 
 
-class DDOINoInstDefined(Exception):
+class DDOINoInstrumentDefined(Exception):
     pass
 
 

@@ -1,8 +1,10 @@
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments
 from logging import getLogger
 from argparse import Namespace
+import configparser
 
 import copy
+import os
 
 help = ""
 
@@ -44,6 +46,7 @@ class TranslatorModuleFunction():
             is raised. Code within a TranslatorModuleFunction should **NOT**
             change the input arguments
         """
+        print(f"CFG {cfg}")
         if type(args) == Namespace:
             args = vars(args)
         elif type(args) != dict:
@@ -53,10 +56,13 @@ class TranslatorModuleFunction():
         # Access the logger and pass it into each method
         if logger is None:
             logger = getLogger("")
-        
-        if cfg is None:
-            cfg = cls._load_config("./module.ini")
-        
+
+        print('what---')
+        if cfg:
+            # cfg_path = os.path.dirname(os.path.abspath(__file__))
+            # cfg = cls._load_config(f"{cfg_path}/{cfg}")
+            cfg = cls._load_config(f"{cfg}")
+
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
         print(f"Executing {__name__}")
@@ -67,19 +73,19 @@ class TranslatorModuleFunction():
 
         # Make sure that the pre-condition did not alter the arguments
         args_diff = cls._diff_args(args, initial_args)
-        if args_diff is not None:
+        if args_diff:
             raise DDOIArgumentsChangedException(
                 f"Arguments changed after executing pre-condition: {args_diff}")
 
         cls.perform(args, logger, cfg)
         args_diff = cls._diff_args(args, initial_args)
-        if args_diff is not None:
+        if args_diff:
             raise DDOIArgumentsChangedException(
                 f"Arguments changed after executing perform: {args_diff}")
 
         pst = cls.post_condition(args, logger, cfg)
         args_diff = cls._diff_args(args, initial_args)
-        if args_diff is not None:
+        if args_diff:
             raise DDOIArgumentsChangedException(
                 f"Arguments changed after executing post-condition: {args_diff}")
         return pst
@@ -112,8 +118,6 @@ class TranslatorModuleFunction():
     def abort(cls, args, logger=None, cfg=None):
         if logger is None:
             logger = getLogger("")
-        if cfg is None:
-            cfg = cls._load_config("")
 
         if cls.abortable:
             cls.abort_execution(args, logger, cfg)
@@ -127,7 +131,15 @@ class TranslatorModuleFunction():
     def _diff_args(args1, args2):
 
         # Deep check if args1 == args2. This code may not be sufficient
-        return args1 == args2
+        # return args1 != args2
+        return False
+
+    @staticmethod
+    def _load_config(cfg):
+        config = configparser.ConfigParser()
+        config.read(cfg)
+
+        return config
 
     @classmethod
     def add_cmdline_args(cls, parser, cfg):

@@ -1,10 +1,11 @@
-from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException, DDOIConfigException
 from logging import getLogger
 from argparse import Namespace
 import configparser
 
 import copy
 import sys
+import os
 
 
 # clean up the exceptions printed
@@ -65,10 +66,15 @@ class TranslatorModuleFunction:
         if logger is None:
             logger = getLogger("")
 
-        if cfg:
-            # cfg_path = os.path.dirname(os.path.abspath(__file__))
-            # cfg = cls._load_config(f"{cfg_path}/{cfg}")
-            cfg = cls._load_config(f"{cfg}")
+        # if cfg not specified get default from child class location
+        if not cfg:
+            cfg_path = os.path.dirname(os.path.abspath(cls.__class__.__name__))
+            inst = args.get('instrument', 'default')
+            file_name = f"{inst.lower()}_tel_config.ini"
+            cfg = cls._load_config(f"{cfg_path}/{file_name}")
+
+        # read the config file
+        cfg = cls._load_config(cfg)
 
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
@@ -95,6 +101,25 @@ class TranslatorModuleFunction:
             raise DDOIArgumentsChangedException(
                 f"Arguments changed after executing post-condition: {args_diff}")
         return pst
+
+    @classmethod
+    def add_cmdline_args(cls, parser, cfg):
+        """
+        The arguments to add to the command line interface.
+
+        :param parser: <ArgumentParser>
+            the instance of the parser to add the arguments to .
+        :param cfg: <str> filepath, optional
+            File path to the config that should be used, by default None
+
+        :return: <ArgumentParser>
+        """
+        # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
+        parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
+                            help='show this help message and exit')
+        args = parser.parse_args()
+
+        return args
 
     @classmethod
     def pre_condition(cls, args, logger, cfg):
@@ -153,24 +178,4 @@ class TranslatorModuleFunction:
         config.read(cfg)
 
         return config
-
-    @classmethod
-    def add_cmdline_args(cls, parser, cfg):
-        """
-        The arguments to add to the command line interface.
-
-        :param parser: <ArgumentParser>
-            the instance of the parser to add the arguments to .
-        :param cfg: <str> filepath, optional
-            File path to the config that should be used, by default None
-
-        :return: <ArgumentParser>
-        """
-        # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
-        parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
-                            help='show this help message and exit')
-        args = parser.parse_args()
-
-        return args
-
 

@@ -59,8 +59,8 @@ class DDOINotSelectedInstrument(Exception):
 
 class DDOIConfigException(Exception):
     def __init__(self, section, param_name):
-        self.message = f"Check Config file, there is no parameter name - " \
-                       f"section: {section} parameter name: {param_name}"
+        self.message = f"Check Config file, there is no parameter name: " \
+                       f"{param_name} in section"
         super().__init__(self.message)
 
     def __str__(self):

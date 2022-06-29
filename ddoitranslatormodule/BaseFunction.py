@@ -4,9 +4,19 @@ from argparse import Namespace
 import configparser
 
 import copy
-import os
+import sys
+import ktl
+
+
+# clean up the exceptions printed
+def excepthook(type, value, traceback):
+    print(f"{type.__name__}: {value}")
+
+
+sys.excepthook = excepthook
 
 help = ""
+
 
 
 class TranslatorModuleFunction:

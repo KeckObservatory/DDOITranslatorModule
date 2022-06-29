@@ -1,22 +1,21 @@
-from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException
 from logging import getLogger
 from argparse import Namespace
 import configparser
 
 import copy
 import sys
-import ktl
 
 
 # clean up the exceptions printed
 def excepthook(type, value, traceback):
-    print(f"{type.__name__}: {value}")
+    print(f"Exception {type.__name__}: {value}")
 
 
 sys.excepthook = excepthook
 
-help = ""
 
+help_str = ""
 
 
 class TranslatorModuleFunction:
@@ -26,7 +25,7 @@ class TranslatorModuleFunction:
     
     # If True, then the abort_execution method may be invoked
     abortable = False
-    help_string = help
+    help_string = help_str
     min_args = {}
 
     @classmethod
@@ -143,6 +142,13 @@ class TranslatorModuleFunction:
 
     @staticmethod
     def _load_config(cfg):
+        # return if config object passed
+        param_type = type(cfg)
+        if param_type == configparser.ConfigParser:
+            return cfg
+        elif param_type != str:
+            raise DDOIConfigFileException(param_type, configparser.ConfigParser)
+
         config = configparser.ConfigParser()
         config.read(cfg)
 

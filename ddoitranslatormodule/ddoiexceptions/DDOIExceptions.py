@@ -56,3 +56,27 @@ class DDOINotSelectedInstrument(Exception):
     def __str__(self):
         return f'{self.message}'
 
+
+class DDOIConfigException(Exception):
+    def __init__(self, section, param_name):
+        self.message = f"Check Config file, there is no parameter name - " \
+                       f"section: {section} parameter name: {param_name}"
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.message}'
+
+
+class DDOIConfigFileException(Exception):
+    def __init__(self, param_type, match_type):
+        self.message = f"Config parameter {param_type} is not a file path " \
+                       f"or type: {match_type}"
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.message}'
+
+
+class DDOIDetectorAngleUndefined(Exception):
+    pass
+

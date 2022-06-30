@@ -65,13 +65,6 @@ class TranslatorModuleFunction:
         if logger is None:
             logger = getLogger("")
 
-        # find the default configurations
-        if not cfg:
-            cfg_path_base = os.path.dirname(os.path.abspath(__file__))
-            inst = args.get('instrument', 'default')
-            file_name = f"{inst.lower()}_tel_config.ini"
-            cfg = cls._load_config(f"{cfg_path_base}/ddoi_configurations/{file_name}")
-
         # read the config file
         cfg = cls._load_config(cfg)
 
@@ -102,7 +95,7 @@ class TranslatorModuleFunction:
         return pst
 
     @classmethod
-    def add_cmdline_args(cls, parser, cfg):
+    def add_cmdline_args(cls, parser, cfg=None):
         """
         The arguments to add to the command line interface.
 
@@ -165,7 +158,13 @@ class TranslatorModuleFunction:
         return False
 
     @staticmethod
-    def _load_config(cfg):
+    def _load_config(args, cfg):
+        if not cfg:
+            cfg_path_base = os.path.dirname(os.path.abspath(__file__))
+            inst = args.get('instrument', 'default')
+            file_name = f"{inst.lower()}_tel_config.ini"
+            cfg = f"{cfg_path_base}/ddoi_configurations/{file_name}"
+
         # return if config object passed
         param_type = type(cfg)
         if param_type == configparser.ConfigParser:

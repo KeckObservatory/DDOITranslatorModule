@@ -7,13 +7,13 @@ import copy
 import sys
 import os
 
+
 # clean up the exceptions printed
 def excepthook(type, value, traceback):
     print(f"Exception {type.__name__}: {value}")
 
 
 sys.excepthook = excepthook
-
 
 help_str = ""
 
@@ -65,7 +65,7 @@ class TranslatorModuleFunction:
         if logger is None:
             logger = getLogger("")
 
-        # read the configuration file
+        # find the default configurations
         if not cfg:
             cfg_path_base = os.path.dirname(os.path.abspath(__file__))
 
@@ -73,6 +73,7 @@ class TranslatorModuleFunction:
             file_name = f"{inst.lower()}_tel_config.ini"
             cfg = cls._load_config(f"{cfg_path_base}/ddoi_configurations/{file_name}")
 
+        # read the config file
         cfg = cls._load_config(cfg)
 
         # Store a copy of the initial args

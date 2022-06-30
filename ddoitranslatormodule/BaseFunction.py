@@ -66,7 +66,7 @@ class TranslatorModuleFunction:
             logger = getLogger("")
 
         # read the config file
-        cfg = cls._load_config(cfg)
+        cfg = cls._load_config(cfg, args=args)
 
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
@@ -158,10 +158,13 @@ class TranslatorModuleFunction:
         return False
 
     @staticmethod
-    def _load_config(args, cfg):
+    def _load_config(cfg, args=None):
         if not cfg:
             cfg_path_base = os.path.dirname(os.path.abspath(__file__))
-            inst = args.get('instrument', 'default')
+            if args:
+                inst = args.get('instrument', 'default')
+            else:
+                inst = 'default'
             file_name = f"{inst.lower()}_tel_config.ini"
             cfg = f"{cfg_path_base}/ddoi_configurations/{file_name}"
 

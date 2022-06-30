@@ -68,7 +68,6 @@ class TranslatorModuleFunction:
         # find the default configurations
         if not cfg:
             cfg_path_base = os.path.dirname(os.path.abspath(__file__))
-
             inst = args.get('instrument', 'default')
             file_name = f"{inst.lower()}_tel_config.ini"
             cfg = cls._load_config(f"{cfg_path_base}/ddoi_configurations/{file_name}")

@@ -51,7 +51,8 @@ def get_functions(cfg):
         res = {
             "module_path" : module_path,
             "abs_path" : str(f),
-            "list" : module_path_list
+            "list" : module_path_list,
+            "name" : module_path_list[-1]
         }
         func_dicts.append(res)
 
@@ -94,9 +95,44 @@ def get_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-l', '--list', dest='list', action='store_true', help="Display all functions availible from this translator")
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Display more detailed information during execution')
     parser.add_argument('function', nargs='*', help="Function to invoke. [function ... ] [arguments ...]")
 
     return parser.parse_args()
+
+def parse_arguments(args, funcs, tree, cfg):
+    matches = []
+    for f in funcs:
+        if f['name'] == args.function[0]:
+            matches.append(f)
+
+    if len(matches) == 1:
+        # If there is one match, use it
+        module = matches[0]
+    elif len(matches) > 1:
+        # If there is more than one match, try to resolve the ambiguity
+        print(f"Ambiguity found: {[f['module_path'] for f in matches]}")
+    else:
+        # No matches found, walk the tree
+        print("No matches found")
+        
+    # Use tree to figure out when function name ends and arguments begin
+    module_path, arguments, leaf = tree.parse_function_list([__package__, cfg['functions_dir']] + args.function)
+    try:
+        module = importlib.import_module(module_path)
+        if not leaf:
+            print('Indicated function is a directory, not a file. Exiting...')
+        else:
+            if hasattr(module, "execute"):
+                module.execute(arguments)
+            else:
+                print("Module does not contain an `execute` function. Exiting...")
+            # print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
+    except ValueError as e:
+        print(f"Unable to import module {module_path}")
+    if args.verbose:
+        print(f"Script function: {module_path}")
+        print(f"Arguments: {arguments}")
 
 def main():
 
@@ -116,18 +152,12 @@ def main():
         tree.print_tree()
 
     if len(args.function) > 0:
-        # Use tree to figure out when function name ends and arguments begin
-        module_path, arguments, leaf = tree.parse_function_list([__package__, cfg['functions_dir']] + args.function)
-        module = importlib.import_module(module_path)
-        if not leaf:
-            print('Indicated function is a directory, not a file. Exiting...')
-            return
-        if hasattr(module, "execute"):
-            module.execute(arguments)
-        else:
-            print("Module does not contain an `execute` function. Exiting...")
-        print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
-        print(f"Arguments: {arguments}")
-
+        parse_arguments(args.function, funcs, tree)
+        # Try to find a function that matches at the end of each module path
+        # If there is only one, great, use that
+        # If there are more than one, highlight the ambiguity and try to resolve
+        # If there isn't then go ahead with the below
+        
+        
 
     

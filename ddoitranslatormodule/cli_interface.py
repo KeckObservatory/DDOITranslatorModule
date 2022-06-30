@@ -3,6 +3,7 @@ import importlib
 from pathlib import Path
 from .cli.FunctionTree import FunctionTree
 
+
 def get_functions(cfg):
     """Recursively searches through the function directory specified in cfg and
     returns a list of dictionaries containing information about those functions
@@ -58,6 +59,7 @@ def get_functions(cfg):
 
     return func_dicts
 
+
 def get_help_string(module_path):
     """Retrieves the help string from a given module, if there is one
 
@@ -84,6 +86,7 @@ def get_help_string(module_path):
         print(f"Error importing {module_path}")
         return 
 
+
 def get_parser():
     """Gets an argument parser object from the command line
 
@@ -92,13 +95,17 @@ def get_parser():
     ArgumentParser
         The ArgumentParser object
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Translator wrapper', add_help=False)
 
-    parser.add_argument('-l', '--list', dest='list', action='store_true', help="Display all functions availible from this translator")
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Display more detailed information during execution')
-    parser.add_argument('function', nargs='*', help="Function to invoke. [function ... ] [arguments ...]")
+    parser.add_argument('-l', '--list', dest='list', action='store_true',
+                        help="Display all functions availible from this translator")
+    parser.add_argument('function', nargs='*',
+                        help="Function to invoke. [function ... ] [arguments ...]")
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
+                        help='Display more detailed information about execution')
 
-    return parser.parse_args()
+    return parser
+
 
 def parse_arguments(args, funcs, tree, cfg):
     matches = []
@@ -136,11 +143,12 @@ def parse_arguments(args, funcs, tree, cfg):
 
 def main():
 
-    args = get_parser()
+    parser = get_parser()
+    args = parser.parse_known_args()
 
     cfg = {
-        "function_prefix" : "func",
-        "functions_dir" : "functions"
+        "function_prefix": "func",
+        "functions_dir": "functions"
     }
     
     funcs = get_functions(cfg)
@@ -152,12 +160,20 @@ def main():
         tree.print_tree()
 
     if len(args.function) > 0:
-        parse_arguments(args.function, funcs, tree)
-        # Try to find a function that matches at the end of each module path
-        # If there is only one, great, use that
-        # If there are more than one, highlight the ambiguity and try to resolve
-        # If there isn't then go ahead with the below
-        
-        
+        # Use tree to figure out when function name ends and arguments begin
+        module_path, arguments, leaf = tree.parse_function_list(
+            [__package__, cfg['functions_dir']] + args.function)
+        module = importlib.import_module(module_path)
+        if not leaf:
+            print('Indicated function is a directory, not a file. Exiting...')
+            return
+        if hasattr(module, "execute"):
+            args = module.add_cmdline_args(cfg, parser)
+            module.execute(args)
+        else:
+            print("Module does not contain an `execute` function. Exiting...")
+        print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
+        print(f"Arguments: {arguments}")
 
-    
+
+

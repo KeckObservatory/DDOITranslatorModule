@@ -13,7 +13,7 @@ def excepthook(type, value, traceback):
     print(f"Exception {type.__name__}: {value}")
 
 
-sys.excepthook = excepthook
+#sys.excepthook = excepthook
 
 help_str = ""
 
@@ -66,7 +66,7 @@ class TranslatorModuleFunction:
             logger = getLogger("")
 
         # read the config file
-        cfg = cls._load_config(cfg, inst=args.get('instrument', 'default'))
+        cfg = cls._load_config(cfg, args=args)
 
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
@@ -158,23 +158,7 @@ class TranslatorModuleFunction:
         return False
 
     @staticmethod
-    def _load_config(cfg, inst=None):
-        if not cfg:
-            cfg_path_base = os.path.dirname(os.path.abspath(__file__))
-            if not inst:
-                inst = 'default'
-            file_name = f"{inst.lower()}_tel_config.ini"
-            cfg = f"{cfg_path_base}/ddoi_configurations/{file_name}"
+    def _load_config(cfg, args=None):
+        raise NotImplementedError()
 
-        # return if config object passed
-        param_type = type(cfg)
-        if param_type == configparser.ConfigParser:
-            return cfg
-        elif param_type != str:
-            raise DDOIConfigFileException(param_type, configparser.ConfigParser)
-
-        config = configparser.ConfigParser()
-        config.read(cfg)
-
-        return config
 

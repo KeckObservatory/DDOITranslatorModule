@@ -1,12 +1,8 @@
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException, DDOIConfigException
 from logging import getLogger
 from argparse import Namespace
-import configparser
 
 import copy
-import sys
-import os
-
 
 # clean up the exceptions printed
 def excepthook(type, value, traceback):

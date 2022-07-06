@@ -40,6 +40,10 @@ class DDOIInvalidArguments(Exception):
     pass
 
 
+class DDOIZeroOffsets(Exception):
+    pass
+
+
 class DDOIKTLTimeOut(Exception):
     pass
 

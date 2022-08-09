@@ -1,11 +1,12 @@
-from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException, DDOIConfigException
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException, DDOIConfigException, DDOIKTLTimeOut
+
 from logging import getLogger
 from argparse import Namespace
 import configparser
 
 import copy
 import sys
-import os
+import ktl
 
 
 # clean up the exceptions printed
@@ -37,7 +38,7 @@ class TranslatorModuleFunction:
         Parameters
         ----------
         args : dict
-            The OB in dictionary form
+            The OB (or portion of OB) in dictionary form
         logger : DDOILoggerClient, optional
             The DDOILoggerClient that should be used. If none is provided, defaults to
             a generic name specified in the config, by default None
@@ -66,15 +67,8 @@ class TranslatorModuleFunction:
         if logger is None:
             logger = getLogger("")
 
-        # if cfg not specified get default from child class location
-        if not cfg:
-            cfg_path = os.path.dirname(os.path.abspath(cls.__class__.__name__))
-            inst = args.get('instrument', 'default')
-            file_name = f"{inst.lower()}_tel_config.ini"
-            cfg = cls._load_config(f"{cfg_path}/{file_name}")
-
         # read the config file
-        cfg = cls._load_config(cfg)
+        cfg = cls._load_config(cls, cfg)
 
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
@@ -103,6 +97,146 @@ class TranslatorModuleFunction:
         return pst
 
     @classmethod
+    def pre_condition(cls, args, logger, cfg):
+      # pre-checks go here
+      raise NotImplementedError()
+          
+    @classmethod
+    def perform(cls, args, logger, cfg):
+        # This is where the bulk of instrument code lives
+        raise NotImplementedError()
+    
+    @classmethod
+    def post_condition(cls, args, logger, cfg):
+        # post-checks go here
+        raise NotImplementedError()
+
+    @classmethod
+    def abort_execution(cls, args, logger, cfg):
+        # Code to abort execution goes here
+        raise NotImplementedError()
+
+    @classmethod
+    def abort(cls, args, logger=None, cfg=None):
+        if logger is None:
+            logger = getLogger("")
+
+        if cls.abortable:
+            cls.abort_execution(args, logger, cfg)
+        else:
+            logger.error("Failed to abort. abort_execution() is not enabled")
+
+        # Code for shutting everything down, even while perform is operating
+        raise NotImplementedError()
+
+    def _write_to_kw(cls, cfg, ktl_service, key_val, logger, cls_name):
+        """
+        Write to KTL keywords while handling the Timeout Exception
+
+        :param cfg:
+        :param ktl_service: The KTL service name
+        :param key_val: <dict> {cfg_key_name: new value}
+            cfg_key_name = the ktl_keyword_name in the config
+        :param logger: <DDOILoggerClient>, optional
+            The DDOILoggerClient that should be used. If none is provided,
+            defaults to a generic name specified in the config, by
+            default None
+        :param cls_name: The name of the calling class
+
+        :return: None
+        """
+        cfg_service = f'ktl_kw_{ktl_service}'
+
+        for cfg_key, new_val in key_val.items():
+            ktl_name = cls._config_param(cfg, cfg_service, cfg_key)
+            try:
+                # ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
+                ktl.read(ktl_service, ktl_name)
+            except ktl.TimeoutException:
+                msg = f"{cls_name} timeout sending offsets."
+                if logger:
+                    logger.error(msg)
+                raise DDOIKTLTimeOut(msg)
+
+
+    @staticmethod
+    def _diff_args(args1, args2):
+
+        # Deep check if args1 == args2. This code may not be sufficient
+        # return args1 != args2
+        return False
+
+    """
+    Configuration File Read Section
+    """
+    def _load_config(cls, cfg, args=None):
+        """
+        Load the configuration file for reading
+
+        @param cfg: <str> file path or None
+        @param args: <dict> the class arguments
+
+        @return: <class 'configparser.ConfigParser'> the config file parser.
+        """
+        config_files = []
+        if not cfg:
+            config_files = cls._config_location(cls, args)
+            try:
+                cfg = config_files[0]
+            except (IndexError, TypeError):
+                raise DDOIConfigFileException(config_files, list)
+
+        # return if config object passed
+        param_type = type(cfg)
+        if param_type == configparser.ConfigParser:
+            return cfg
+        elif param_type != str:
+            raise DDOIConfigFileException(param_type, configparser.ConfigParser)
+
+        config = configparser.ConfigParser()
+        config.read(config_files)
+
+        return config
+
+    def _config_location(cls, args):
+        """
+        Return the fullpath + filename of default configuration file.
+
+        :param args: <dict> The OB (or portion of OB) in dictionary form
+
+        :return: <list> list of paths + filename to config files
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def _config_param(cfg, section, param_name):
+        """
+        Function used to read the config file,  and exit if key or value
+        does not exist.
+
+        @param cfg: <class 'configparser.ConfigParser'> the config file parser.
+        @param section: <str> the section name in the config file.
+        @param param_name: <str> the 'key' of the parameter within the section.
+        @return: <str> the config file value for the parameter.
+        """
+        try:
+            param_val = cfg[section][param_name]
+        except KeyError:
+            raise DDOIConfigException(section, param_name)
+
+        if not param_val:
+            raise DDOIConfigException(section, param_name)
+
+        return param_val
+
+    """
+    Command line Argument Section for use with CLI (Command Line Interface)
+    
+        parser = argparse.ArgumentParser()
+        args = Function.add_cmdline_args(parser)
+        result = Function.execute(args)
+    """
+    @classmethod
     def add_cmdline_args(cls, parser, cfg):
         """
         The arguments to add to the command line interface.
@@ -121,61 +255,53 @@ class TranslatorModuleFunction:
 
         return args
 
-    @classmethod
-    def pre_condition(cls, args, logger, cfg):
-      
-      # pre-checks go here
-      raise NotImplementedError()
-          
-    @classmethod
-    def perform(cls, args, logger, cfg):
-    
-        # This is where the bulk of instrument code lives
-        raise NotImplementedError()
-    
-    @classmethod
-    def post_condition(cls, args, logger, cfg):
-        
-        # post-checks go here
-        raise NotImplementedError()
+    @staticmethod
+    def _add_args(parser, args_to_add, print_only=False):
+        """
+        Add the argparse arguments.
 
-    @classmethod
-    def abort_execution(cls, args, logger, cfg):
+        :param parser: <configparser> The parser object
+        :param args_to_add: OrderedDict the arguments to add.
+            keywords:
+                'help' - <str> the help string to add, required
+                'type' - <python type>, the argument type,  required
+                'req' - <bool> True if the argument is required,  optional
+                'kw_arg' - <bool> True for keyword arguments, optional
+        :param print_only: <bool> True if add the print_only option
 
-        # Code to abort execution goes here
-        raise NotImplementedError()
+        :return: <configparser> The parser object
+        """
+        # check to see if print_only is true,  then do not add other arguments.
+        if print_only:
+            parser.add_argument('--print_only', action='store_true', default=False)
+            args = parser.parse_known_args()
+            if args[0].print_only:
+                return parser
 
-    @classmethod
-    def abort(cls, args, logger=None, cfg=None):
-        if logger is None:
-            logger = getLogger("")
+        for arg_name, arg_info in args_to_add.items():
+            # add keyword arguments
+            if 'kw_arg' in arg_info and arg_info['kw_arg']:
+                parser.add_argument(f'{--arg_name}', type=arg_info['type'],
+                                    required=arg_info['req'], help=arg_info['help'])
+                continue
 
-        if cls.abortable:
-            cls.abort_execution(args, logger, cfg)
-        else:
-            logger.error("Failed to abort. abort_execution() is not enabled")
+            # add positional arguments
+            parser.add_argument(arg_name, type=arg_info['type'], help=arg_info['help'])
 
-        # Code for shutting everything down, even while perform is operating
-        raise NotImplementedError()
+        return parser
 
     @staticmethod
-    def _diff_args(args1, args2):
+    def _add_bool_arg(parser, name, msg):
+        """
 
-        # Deep check if args1 == args2. This code may not be sufficient
-        # return args1 != args2
-        return False
+        :param parser: <configparser> The parser object.
+        :param name: <str> the parameter name
+        :param msg: <str> the help message
 
-    @staticmethod
-    def _load_config(cfg):
-        # return if config object passed
-        param_type = type(cfg)
-        if param_type == configparser.ConfigParser:
-            return cfg
-        elif param_type != str:
-            raise DDOIConfigFileException(param_type, configparser.ConfigParser)
+        :return: <configparser> The parser object.
+        """
+        parser.add_argument(f'--{name}', action='store_true', default=False,
+                            help=msg)
+        return parser
 
-        config = configparser.ConfigParser()
-        config.read(cfg)
-
-        return config
 

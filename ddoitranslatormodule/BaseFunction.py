@@ -2,10 +2,8 @@ from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChan
 
 from logging import getLogger
 from argparse import Namespace
-import configparser
 
 import copy
-import sys
 import ktl
 
 
@@ -14,8 +12,7 @@ def excepthook(type, value, traceback):
     print(f"Exception {type.__name__}: {value}")
 
 
-sys.excepthook = excepthook
-
+#sys.excepthook = excepthook
 
 help_str = ""
 
@@ -68,7 +65,7 @@ class TranslatorModuleFunction:
             logger = getLogger("")
 
         # read the config file
-        cfg = cls._load_config(cls, cfg)
+        cfg = cls._load_config(cls, cfg, args=args)
 
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
@@ -95,6 +92,25 @@ class TranslatorModuleFunction:
             raise DDOIArgumentsChangedException(
                 f"Arguments changed after executing post-condition: {args_diff}")
         return pst
+
+    @classmethod
+    def add_cmdline_args(cls, parser, cfg=None):
+        """
+        The arguments to add to the command line interface.
+
+        :param parser: <ArgumentParser>
+            the instance of the parser to add the arguments to .
+        :param cfg: <str> filepath, optional
+            File path to the config that should be used, by default None
+
+        :return: <ArgumentParser>
+        """
+        # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
+        parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
+                            help='show this help message and exit')
+        args = parser.parse_args()
+
+        return args
 
     @classmethod
     def pre_condition(cls, args, logger, cfg):

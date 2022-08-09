@@ -135,6 +135,7 @@ class FunctionTree():
             the list of arguments used to create that string, and the arguments
             at the end of the function path
         """
+
         node = self.root
         split_point = 0
         func_path = function_list
@@ -150,9 +151,10 @@ class FunctionTree():
                 break
         
         # At this point, we either have a file, a directory, or something that doesn't exist
+        # TODO:
+            # If the function path doesn't resolve, figure out if it's because it doesn't exist, or it's a directory
+            # Place some safeguards around the actual execution, perhaps add a trial-run flag
         
         mod_path = ".".join(func_path[:split_point])
-        # print("Script function: " + ".".join(mod_path))
-        # print(f"Arguments: {func_path[split_point:]}")
         return (mod_path, func_path[split_point:], final_node_is_leaf)
     

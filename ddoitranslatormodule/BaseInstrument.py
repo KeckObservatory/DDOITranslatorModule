@@ -9,7 +9,7 @@ class InstrumentBase(TranslatorModuleFunction):
 
         :param args: <dict> The OB (or portion of OB) in dictionary form
 
-        :return: <str> fullpath + filename of default configuration
+        :return: <list> fullpath + filename of default configuration
         """
         raise NotImplementedError()
 

@@ -14,7 +14,7 @@ class TelescopeBase(TranslatorModuleFunction):
 
         :param args: <dict> The OB (or portion of OB) in dictionary form
 
-        :return: <str> fullpath + filename of default configuration
+        :return: <list> fullpath + filename of default configuration
         """
         cfg_path_base = os.path.dirname(os.path.abspath(__file__))
         cfg = f"{cfg_path_base}/ddoi_configurations/default_tel_config.ini"

@@ -165,7 +165,7 @@ class TranslatorModuleFunction:
         cfg_service = f'ktl_kw_{ktl_service}'
 
         for cfg_key, new_val in key_val.items():
-            ktl_name = cls._config_param(cfg, cfg_service, cfg_key)
+            ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
             try:
                 # ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
                 ktl.read(ktl_service, ktl_name)
@@ -227,7 +227,7 @@ class TranslatorModuleFunction:
 
 
     @staticmethod
-    def _config_param(cfg, section, param_name):
+    def _cfg_val(cfg, section, param_name):
         """
         Function used to read the config file,  and exit if key or value
         does not exist.

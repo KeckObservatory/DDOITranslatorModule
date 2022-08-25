@@ -41,7 +41,7 @@ class TelescopeBase(TranslatorModuleFunction):
 
         :return: <configparser> The parser object.
         """
-        insts = cls._config_param(cfg, 'inst_list', 'insts')
+        insts = cls._cfg_val(cfg, 'inst_list', 'insts')
         insts = f'{insts}, {insts.lower()}'
         inst_set = set(insts.split(', '))
 
@@ -106,8 +106,8 @@ class TelescopeBase(TranslatorModuleFunction):
         :return:
         """
         if cfg:
-            ktl_instrument = cls._config_param(cfg, 'ktl_kw_dcs', 'instrument')
-            serv_name = cls._config_param(cfg, 'ktl_serv', 'dcs')
+            ktl_instrument = cls._cfg_val(cfg, 'ktl_kw_dcs', 'instrument')
+            serv_name = cls._cfg_val(cfg, 'ktl_serv', 'dcs')
         else:
             ktl_instrument = 'instrume'
             serv_name = 'dcs'

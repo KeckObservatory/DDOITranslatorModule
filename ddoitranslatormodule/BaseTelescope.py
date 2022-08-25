@@ -134,7 +134,10 @@ class TelescopeBase(TranslatorModuleFunction):
         :param msg: <str> the message to write
         :param print_only: <bool> True if it is meant to be printed to stdout
         """
-        if logger and not print_only:
+        # if logger instance,  write to the log
+        if logger:
             logger.info(msg)
-        else:
+
+        # print to stdout for 'print_only'
+        if print_only:
             print(msg)

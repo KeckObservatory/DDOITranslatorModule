@@ -2,6 +2,7 @@ from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChan
 
 from logging import getLogger
 from argparse import Namespace
+import configparser
 
 import copy
 import ktl
@@ -223,6 +224,7 @@ class TranslatorModuleFunction:
         :return: <list> list of paths + filename to config files
         """
         raise NotImplementedError()
+
 
     @staticmethod
     def _config_param(cfg, section, param_name):

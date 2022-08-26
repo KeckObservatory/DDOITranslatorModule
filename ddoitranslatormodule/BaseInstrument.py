@@ -1,9 +1,10 @@
 from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
+import os
 
 
 class InstrumentBase(TranslatorModuleFunction):
 
-    def _config_location(cls, args):
+    def _cfg_location(cls, args):
         """
         Return the fullpath + filename of default configuration file.
 
@@ -11,6 +12,19 @@ class InstrumentBase(TranslatorModuleFunction):
 
         :return: <list> fullpath + filename of default configuration
         """
-        raise NotImplementedError()
+        cfg_path_base = os.path.dirname(os.path.abspath(__file__))
+
+        try:
+            inst = cls.inst
+        except NameError:
+            if args:
+                inst = args.get('instrument', None)
+            else:
+                inst = cls.read_current_inst(None)
+
+        cfg = f"{cfg_path_base}/ddoi_configurations/{inst}_inst_config.ini"
+        config_files = [cfg]
+
+        return config_files
 
 

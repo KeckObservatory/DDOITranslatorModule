@@ -8,7 +8,7 @@ import ktl
 
 class TelescopeBase(TranslatorModuleFunction):
 
-    def _config_location(cls, args):
+    def _cfg_location(cls, args):
         """
         Return the fullpath + filename of default configuration file.
 

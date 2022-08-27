@@ -20,7 +20,7 @@ class InstrumentBase(TranslatorModuleFunction):
             if args:
                 inst = args.get('instrument', None)
             else:
-                inst = cls.read_current_inst(None)
+                inst = cls.read_current_inst(cls, None)
 
         cfg = f"{cfg_path_base}/ddoi_configurations/{inst}_inst_config.ini"
         config_files = [cfg]

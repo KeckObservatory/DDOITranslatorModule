@@ -22,7 +22,7 @@ class TelescopeBase(TranslatorModuleFunction):
         if args:
             inst = args.get('instrument', None)
         else:
-            inst = cls.read_current_inst(None)
+            inst = cls.read_current_inst(cls, None)
 
         if not inst:
             return config_files

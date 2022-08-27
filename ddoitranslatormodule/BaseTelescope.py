@@ -24,6 +24,9 @@ class TelescopeBase(TranslatorModuleFunction):
         else:
             inst = cls.read_current_inst(None)
 
+        if not inst:
+            return config_files
+
         file_name = f"{inst.lower()}_tel_config.ini"
         cfg = f"{cfg_path_base}/ddoi_configurations/{file_name}"
         if os.path.exists(cfg):

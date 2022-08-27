@@ -197,7 +197,7 @@ class TranslatorModuleFunction:
         """
         config_files = []
         if not cfg:
-            config_files = cls._config_location(cls, args)
+            config_files = cls._cfg_location(cls, args)
             try:
                 cfg = config_files[0]
             except (IndexError, TypeError):

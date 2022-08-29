@@ -5,8 +5,10 @@ from argparse import Namespace
 import configparser
 
 import copy
-import ktl
-
+try:
+    import ktl
+except:
+    print("Failed to import KTL.")
 
 # clean up the exceptions printed
 def excepthook(type, value, traceback):

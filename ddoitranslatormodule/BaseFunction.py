@@ -5,10 +5,7 @@ from argparse import Namespace
 import configparser
 
 import copy
-try:
-    import ktl
-except:
-    print("Failed to import KTL.")
+
 
 # clean up the exceptions printed
 def excepthook(type, value, traceback):
@@ -164,6 +161,11 @@ class TranslatorModuleFunction:
 
         :return: None
         """
+        try:
+            import ktl
+        except:
+            print("Failed to import KTL.")
+            return
         cfg_service = f'ktl_kw_{ktl_service}'
 
         for cfg_key, new_val in key_val.items():

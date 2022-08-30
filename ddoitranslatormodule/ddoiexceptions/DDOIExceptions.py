@@ -84,3 +84,5 @@ class DDOIConfigFileException(Exception):
 class DDOIDetectorAngleUndefined(Exception):
     pass
 
+class DDOITranslatorModuleNotFoundException(Exception):
+    pass

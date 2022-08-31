@@ -1,179 +1,150 @@
-import argparse
 import importlib
-from pathlib import Path
-from .cli.FunctionTree import FunctionTree
+import traceback
+import sys
+import configparser
+from typing import Dict, List
 
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOITranslatorModuleNotFoundException
 
-def get_functions(cfg):
-    """Recursively searches through the function directory specified in cfg and
-    returns a list of dictionaries containing information about those functions
+class LinkingTable():
+    """Class storing the contents of a linking table
+    """
+
+    def __init__(self, filename) -> None:
+        raw =  configparser.ConfigParser()
+        raw.read(filename)
+        self.cfg = raw
+        self.prefix = raw['common']['prefix']
+        self.suffix = raw['common']['suffix']
+    
+    def get_entry_points(self) -> List[str]:
+        eps = [key for key in self.cfg['links']]
+        return eps
+    
+    def print_entry_points(self, prefix="") -> None:
+        for i in self.get_entry_points():
+            print(prefix + i)
+
+    def get_link(self, entry_point) -> str:
+        output = ""
+        if self.prefix:
+            output += self.prefix + "."
+        output += self.cfg['links'][entry_point]
+        if self.suffix:
+            output += "." + self.suffix
+        return output
+
+def get_linked_function(linking_tbl, key):
+    """Searches a linking table for a given key, and attempts to fetch the
+    associated python module
 
     Parameters
     ----------
-    cfg : dict or dict-like
-        Parsed configuration file
+    linking_tbl : LinkingTable
+        Linking Table that should be searched
+    key : str
+        CLI function being searched for
 
     Returns
     -------
-    list of dict
-        All of the functions in the specified directory that match the given
-        prefix. Each dict contains:
-        module_path: string that can be used to import the found function
-        abs_path: the absolute path to that function
-        list: the module path as a list of strings, rather than joined with .
+    Tuple[class, str]
+        The class matching the given key, and the module path string needed to
+        import it
+
+    Raises
+    ------
+    DDOITranslatorModuleNotFoundException
+        If there is not an associated Translator Module
     """
-    
-    # Get functions directory
-    func_dir = Path(__file__).parent / cfg['functions_dir']
 
-    # Get all functions
-    functions = [i for i in func_dir.rglob(f'{cfg["function_prefix"]}*.py')]
-    
-    # Empty list for functions to fill
-    func_dicts = []
-    
-    for f in functions:
-        
-        # Get the absolute path, everything before the functions directory
-        levels = str(f).split(str(func_dir))[-1]
-        
-        # Split on / to get modules/submodules, and remove the first empty one
-        levels = levels.split('/')[1:]
-        
-        # Add in the package itself
-        module_path_list = [__package__] + [cfg['functions_dir']] + levels
-
-        # String off the '.py' from the last element
-        module_path_list[-1] = module_path_list[-1][:-3]
-        
-        # Form into an import string
-        module_path = ".".join(module_path_list)
-        
-        res = {
-            "module_path" : module_path,
-            "abs_path" : str(f),
-            "list" : module_path_list,
-            "name" : module_path_list[-1]
-        }
-        func_dicts.append(res)
-
-    return func_dicts
-
-
-def get_help_string(module_path):
-    """Retrieves the help string from a given module, if there is one
-
-    Parameters
-    ----------
-    module_path : str
-        import string for the module in question (e.g. package.subpackage.mod)
-
-    Returns
-    -------
-    str
-        The help string found if there is one, otherwise None
-    """
+    # Check to see if there is an entry matching the given key
+    if key not in linking_tbl.get_entry_points():
+        raise DDOITranslatorModuleNotFoundException(f"Unable to find an import for {key}")
+    module_str = linking_tbl.get_link(key)
     
     try:
-        mod = importlib.import_module(module_path)
-        help = getattr(mod, 'help_string')
-        if help:
-            return help
-        else:
-            print(f"No help_string attribute found in {module_path}")
-            return None
-    except:
-        print(f"Error importing {module_path}")
-        return 
-
-
-def get_parser():
-    """Gets an argument parser object from the command line
-
-    Returns
-    -------
-    ArgumentParser
-        The ArgumentParser object
-    """
-    parser = argparse.ArgumentParser(description='Translator wrapper', add_help=False)
-
-    parser.add_argument('-l', '--list', dest='list', action='store_true',
-                        help="Display all functions availible from this translator")
-    parser.add_argument('function', nargs='*',
-                        help="Function to invoke. [function ... ] [arguments ...]")
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                        help='Display more detailed information about execution')
-
-    return parser
-
-
-def parse_arguments(args, funcs, tree, cfg):
-    matches = []
-    for f in funcs:
-        if f['name'] == args.function[0]:
-            matches.append(f)
-
-    if len(matches) == 1:
-        # If there is one match, use it
-        module = matches[0]
-    elif len(matches) > 1:
-        # If there is more than one match, try to resolve the ambiguity
-        print(f"Ambiguity found: {[f['module_path'] for f in matches]}")
-    else:
-        # No matches found, walk the tree
-        print("No matches found")
+        # Try to import the package from the string in the linking table
+        mod = importlib.import_module(module_str)
         
-    # Use tree to figure out when function name ends and arguments begin
-    module_path, arguments, leaf = tree.parse_function_list([__package__, cfg['functions_dir']] + args.function)
-    try:
-        module = importlib.import_module(module_path)
-        if not leaf:
-            print('Indicated function is a directory, not a file. Exiting...')
-        else:
-            if hasattr(module, "execute"):
-                module.execute(arguments)
-            else:
-                print("Module does not contain an `execute` function. Exiting...")
-            # print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
-    except ValueError as e:
-        print(f"Unable to import module {module_path}")
-    if args.verbose:
-        print(f"Script function: {module_path}")
-        print(f"Arguments: {arguments}")
+        # For each non-builtin property in the module, check if:
+        #   - It is an Inherited function (e.g. base function)
+        #   - There is a perform method. This assumes nothing else will have a
+        #     method called perform, which may be an unsafe assumption
+        # If those conditions are met, we found our module, and return it and
+        # its path
+        for property in [i for i in dir(mod) if not i.startswith("__")]:
+            if "ModuleFunction" not in property:
+                if "perform" in dir(getattr(mod, property)):
+                    return getattr(mod, property), f"{module_str}.{property}"
+
+        print("Failed to find a class with a perform method")
+        return None, None
+    except ImportError as e:
+        print(f"Failed to import {module_str}")
+        print(traceback.format_exc())
+        return None, None
 
 def main():
 
-    parser = get_parser()
-    args = parser.parse_known_args()
+    # Load the linking table from the filename specified in the config
+    cfg = {'linking_table_name' : './test_translator/linking_tbl.ini'}
+    linking_tbl = LinkingTable(cfg['linking_table_name'])
 
-    cfg = {
-        "function_prefix": "func",
-        "functions_dir": "functions"
-    }
-    
-    funcs = get_functions(cfg)
-    tree = FunctionTree(root=__package__)
-    for f in funcs:
-        tree.add_list_to_tree(f['list'])
-    
-    if args.list:
-        tree.print_tree()
+    #
+    ### Handle command line arguments
+    #
 
-    if len(args.function) > 0:
-        # Use tree to figure out when function name ends and arguments begin
-        module_path, arguments, leaf = tree.parse_function_list(
-            [__package__, cfg['functions_dir']] + args.function)
-        module = importlib.import_module(module_path)
-        if not leaf:
-            print('Indicated function is a directory, not a file. Exiting...')
-            return
-        if hasattr(module, "execute"):
-            args = module.add_cmdline_args(cfg, parser)
-            module.execute(args)
+    args = sys.argv
+    dry_run = False
+    # Help:
+    if '-h' in args or '--help' in args:
+        # If this is help for a specific module:
+        if len(args) > 2:
+            try:
+                function, mod_str = get_linked_function(linking_tbl, args[1])
+                print(function.__doc__)
+                # figure out how to access the argparse from outside, and print the -h
+            except DDOITranslatorModuleNotFoundException as e:
+                print(e)
+                print("Available options are:")
+                linking_tbl.print_entry_points("   ")
+        # Print help for using this CLI script
         else:
-            print("Module does not contain an `execute` function. Exiting...")
-        print(f'Module path: {module_path}, which {"is" if leaf else "is not"} a leaf')
-        print(f"Arguments: {arguments}")
+            print(f"This is the CLI entry script for {__package__}")
+            print(
+"""
+Options are:
+    -l, --list:
+        Print all entry points available for use
+    -n, --dry-run:
+        Print what command would be invoked without actually executing it
+""")
+        return
+    # List:
+    if '-l' in args or '--list' in args:
+        linking_tbl.print_entry_points()
+        return
+    # Dry run:
+    if '-n' in args or '--dry-run' in args:
+        dry_run = True
+        if "-n" in args: args.remove("-n")
+        if "--dry-run" in args: args.remove("--dry-run")
 
+    #
+    ### Handle Execution
+    #
+    
+    try:
+        function, mod_str = get_linked_function(linking_tbl, args[1])
 
-
+        if dry_run:
+            print(f"Function: {mod_str}\nArgs: [{' '.join(args[2:])}]")
+        else:
+            print(f"Executing {mod_str} {' '.join(args[2:])}")
+            function.execute(args[2:])
+    except DDOITranslatorModuleNotFoundException as e:
+        print(e)
+    except ImportError as e:
+        print(e)
+if __name__ == "__main__":
+    main()

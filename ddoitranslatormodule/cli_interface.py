@@ -1,11 +1,12 @@
+from argparse import ArgumentParser
 import importlib
 import traceback
 import sys
 import configparser
-from typing import Dict, List
-
+from typing import Dict, List, Tuple
+from inspect import getsource
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOITranslatorModuleNotFoundException
-
+from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
 class LinkingTable():
     """Class storing the contents of a linking table
     """
@@ -34,7 +35,7 @@ class LinkingTable():
             output += "." + self.suffix
         return output
 
-def get_linked_function(linking_tbl, key):
+def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str]:
     """Searches a linking table for a given key, and attempts to fetch the
     associated python module
 
@@ -103,6 +104,9 @@ def main():
             try:
                 function, mod_str = get_linked_function(linking_tbl, args[1])
                 print(function.__doc__)
+                parser = ArgumentParser()
+                parser = function.add_cmdline_args(parser)
+                parser.print_help()
                 # figure out how to access the argparse from outside, and print the -h
             except DDOITranslatorModuleNotFoundException as e:
                 print(e)
@@ -136,15 +140,24 @@ Options are:
     
     try:
         function, mod_str = get_linked_function(linking_tbl, args[1])
+        
+        parser = ArgumentParser()
+        # Call the add cmd line args
+        parser = function.add_cmdline_args(parser)
 
+        # Parse the args
+        parsed_args = parser.parse_args(args[2:])
+        
         if dry_run:
             print(f"Function: {mod_str}\nArgs: [{' '.join(args[2:])}]")
         else:
             print(f"Executing {mod_str} {' '.join(args[2:])}")
-            function.execute(args[2:])
+            function.execute(parsed_args)
     except DDOITranslatorModuleNotFoundException as e:
         print(e)
     except ImportError as e:
         print(e)
+    except TypeError as e:
+        print(traceback.format_exc())
 if __name__ == "__main__":
     main()

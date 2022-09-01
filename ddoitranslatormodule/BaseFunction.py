@@ -272,8 +272,8 @@ class TranslatorModuleFunction:
         :return: <ArgumentParser>
         """
         # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
-        parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
-                            help='show this help message and exit')
+        # parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
+        #                     help='show this help message and exit')
 
         return parser
 

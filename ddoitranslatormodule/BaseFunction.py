@@ -274,9 +274,8 @@ class TranslatorModuleFunction:
         # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
         parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
                             help='show this help message and exit')
-        args = parser.parse_args()
 
-        return args
+        return parser
 
     @staticmethod
     def _add_args(parser, args_to_add, print_only=False):

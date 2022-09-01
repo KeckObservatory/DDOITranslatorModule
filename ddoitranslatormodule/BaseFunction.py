@@ -93,25 +93,25 @@ class TranslatorModuleFunction:
                 f"Arguments changed after executing post-condition: {args_diff}")
         return pst
 
-    @classmethod
-    def add_cmdline_args(cls, parser) -> ArgumentParser:
-        """
-        The arguments to add to the command line interface.
+    # @classmethod
+    # def add_cmdline_args(cls, parser) -> ArgumentParser:
+    #     """
+    #     The arguments to add to the command line interface.
 
-        :param parser: <ArgumentParser>
-            the instance of the parser to add the arguments to .
-        :param cfg: <str> filepath, optional
-            File path to the config that should be used, by default None
+    #     :param parser: <ArgumentParser>
+    #         the instance of the parser to add the arguments to .
+    #     :param cfg: <str> filepath, optional
+    #         File path to the config that should be used, by default None
 
-        :return: <ArgumentParser>
-        """
-        # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
-        # parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
-        #                     help='show this help message and exit')
-        # args = parser.parse_args()
+    #     :return: <ArgumentParser>
+    #     """
+    #     # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
+    #     # parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
+    #     #                     help='show this help message and exit')
+    #     # args = parser.parse_args()
 
-        # return args
-        return parser
+    #     # return args
+    #     return parser
 
     @classmethod
     def pre_condition(cls, args, logger, cfg):
@@ -259,24 +259,24 @@ class TranslatorModuleFunction:
         args = Function.add_cmdline_args(parser)
         result = Function.execute(args)
     """
-    # @classmethod
-    # def add_cmdline_args(cls, parser, cfg):
-    #     """
-    #     The arguments to add to the command line interface.
+    @classmethod
+    def add_cmdline_args(cls, parser, cfg=None):
+        """
+        The arguments to add to the command line interface.
 
-    #     :param parser: <ArgumentParser>
-    #         the instance of the parser to add the arguments to .
-    #     :param cfg: <str> filepath, optional
-    #         File path to the config that should be used, by default None
+        :param parser: <ArgumentParser>
+            the instance of the parser to add the arguments to .
+        :param cfg: <str> filepath, optional
+            File path to the config that should be used, by default None
 
-    #     :return: <ArgumentParser>
-    #     """
-    #     # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
-    #     parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
-    #                         help='show this help message and exit')
-    #     args = parser.parse_args()
+        :return: <ArgumentParser>
+        """
+        # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
+        parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
+                            help='show this help message and exit')
+        args = parser.parse_args()
 
-    #     return args
+        return args
 
     @staticmethod
     def _add_args(parser, args_to_add, print_only=False):

@@ -93,26 +93,6 @@ class TranslatorModuleFunction:
                 f"Arguments changed after executing post-condition: {args_diff}")
         return pst
 
-    # @classmethod
-    # def add_cmdline_args(cls, parser) -> ArgumentParser:
-    #     """
-    #     The arguments to add to the command line interface.
-
-    #     :param parser: <ArgumentParser>
-    #         the instance of the parser to add the arguments to .
-    #     :param cfg: <str> filepath, optional
-    #         File path to the config that should be used, by default None
-
-    #     :return: <ArgumentParser>
-    #     """
-    #     # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
-    #     # parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
-    #     #                     help='show this help message and exit')
-    #     # args = parser.parse_args()
-
-    #     # return args
-    #     return parser
-
     @classmethod
     def pre_condition(cls, args, logger, cfg):
       # pre-checks go here
@@ -272,8 +252,8 @@ class TranslatorModuleFunction:
         :return: <ArgumentParser>
         """
         # add: return super().add_cmdline_args(parser, cfg) to the end of extended method
-        # parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
-        #                     help='show this help message and exit')
+        parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
+                            help='show this help message and exit')
 
         return parser
 

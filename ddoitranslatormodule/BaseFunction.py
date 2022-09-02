@@ -283,7 +283,7 @@ class TranslatorModuleFunction:
         for arg_name, arg_info in args_to_add.items():
             # add keyword arguments
             if 'kw_arg' in arg_info and arg_info['kw_arg']:
-                parser.add_argument(f'{--arg_name}', type=arg_info['type'],
+                parser.add_argument(f'--{arg_name}', type=arg_info['type'],
                                     required=arg_info['req'], help=arg_info['help'])
                 continue
 

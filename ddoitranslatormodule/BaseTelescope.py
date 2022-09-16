@@ -72,6 +72,35 @@ class TelescopeBase(TranslatorModuleFunction):
 
         return val
 
+    def _write_to_kw(cls, cfg, ktl_service, key_val, logger, cls_name):
+        """
+        Write to KTL keywords while handling the Timeout Exception
+
+        :param cfg:
+        :param ktl_service: The KTL service name
+        :param key_val: <dict> {cfg_key_name: new value}
+            cfg_key_name = the ktl_keyword_name in the config
+        :param logger: <DDOILoggerClient>, optional
+            The DDOILoggerClient that should be used. If none is provided,
+            defaults to a generic name specified in the config, by
+            default None
+        :param cls_name: The name of the calling class
+
+        :return: None
+        """
+        cfg_service = f'ktl_kw_{ktl_service}'
+
+        for cfg_key, new_val in key_val.items():
+            ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
+            try:
+                # ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
+                ktl.read(ktl_service, ktl_name)
+            except ktl.TimeoutException:
+                msg = f"{cls_name} timeout sending offsets."
+                if logger:
+                    logger.error(msg)
+                raise DDOIKTLTimeOut(msg)
+
     def get_inst_name(cls, args, cfg, allow_current=True):
         """
         Get the instrument name from the arguments,  if not defined get from
@@ -125,7 +154,7 @@ class TelescopeBase(TranslatorModuleFunction):
         return inst.lower()
 
     @staticmethod
-    def write_msg(logger, msg, print_only=False):
+    def write_msg(logger, msg, val=False, print_only=False):
         """
         Write a message to logger if defined,  or to stdout if print_only
         or logger is not defined.
@@ -143,4 +172,6 @@ class TelescopeBase(TranslatorModuleFunction):
 
         # print to stdout for 'print_only'
         if print_only:
+            if val:
+                msg = val
             print(msg)

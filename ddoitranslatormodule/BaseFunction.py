@@ -126,41 +126,6 @@ class TranslatorModuleFunction:
         # Code for shutting everything down, even while perform is operating
         raise NotImplementedError()
 
-    def _write_to_kw(cls, cfg, ktl_service, key_val, logger, cls_name):
-        """
-        Write to KTL keywords while handling the Timeout Exception
-
-        :param cfg:
-        :param ktl_service: The KTL service name
-        :param key_val: <dict> {cfg_key_name: new value}
-            cfg_key_name = the ktl_keyword_name in the config
-        :param logger: <DDOILoggerClient>, optional
-            The DDOILoggerClient that should be used. If none is provided,
-            defaults to a generic name specified in the config, by
-            default None
-        :param cls_name: The name of the calling class
-
-        :return: None
-        """
-        try:
-            import ktl
-        except:
-            print("Failed to import KTL.")
-            return
-        cfg_service = f'ktl_kw_{ktl_service}'
-
-        for cfg_key, new_val in key_val.items():
-            ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
-            try:
-                # ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
-                ktl.read(ktl_service, ktl_name)
-            except ktl.TimeoutException:
-                msg = f"{cls_name} timeout sending offsets."
-                if logger:
-                    logger.error(msg)
-                raise DDOIKTLTimeOut(msg)
-
-
     @staticmethod
     def _diff_args(args1, args2):
 

@@ -93,8 +93,8 @@ class TelescopeBase(TranslatorModuleFunction):
         for cfg_key, new_val in key_val.items():
             ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
             try:
-                # ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
-                ktl.read(ktl_service, ktl_name)
+                ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
+                # ktl.read(ktl_service, ktl_name)
             except ktl.TimeoutException:
                 msg = f"{cls_name} timeout sending offsets."
                 if logger:

@@ -1,0 +1,30 @@
+# Parameters used by all functions
+common:
+  prefix: name_of_this_module
+  suffix: null
+
+# Contains the modules and their entry points
+links:
+
+  # entry_point is the thing that gets typed into the command line  
+  entry_point:
+    # the *value* of cmd is the path to the class to be executed
+    cmd: python_file_name.ClassName
+
+  # Using an anchor allows for aliasing commands easily
+  example_of_alias: &example_anchor
+    cmd: python_file_name.ClassName
+  
+  # aliased_name will have all the properties of example_of_alias
+  # This is only useful if you want one function to have more than one entry_point
+  aliased_name: *example_anchor
+
+
+  args_example:
+    cmd: python_file_name.ClassName
+    # These are default positional arguments
+    # '25' will be inserted as an argument at index 1, and 'example_arg' will be
+    # inserted at index 3
+    args:
+      arg_1: 25
+      arg_3: example_arg

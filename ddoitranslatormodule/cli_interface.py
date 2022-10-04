@@ -105,8 +105,8 @@ class LinkingTable():
         args = None
         # Load the config file, and create an array with [None, SADSASD, None, etc...]
         # maybe return a function that takes in a partial arguments array and outputs a full array?
+        args = []
         if 'args' in self.links[entry_point].keys():
-            args = []
             for arg in self.links[entry_point]['args']:
                 arg_index = arg.split("_")[1]
                 args.append((int(arg_index), self.links[entry_point]['args'][arg]))
@@ -183,7 +183,7 @@ def main():
     
     parser = ArgumentParser(add_help=False)
     parser.add_argument("-l", "--list", dest="list", action="store_true", help="List functions in this module")
-    parser.add_argument("-n", "--dry-run", dest="dryrun", action="store_true", help="Print what function would be called with what arguments, with no actual invocation")
+    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="Print what function would be called with what arguments, with no actual invocation")
     parser.add_argument("-h", "--help", dest="help", action="store_true")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print extra information")
     parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
@@ -228,21 +228,21 @@ def main():
         # Insert required default arguments
         final_args = parsed_args.function_args[1:]
         for arg_tup in args:
-            final_args.insert(arg_tup[0], arg_tup[1])
+            final_args.insert(arg_tup[0], str(arg_tup[1]))
         
         # Build an ArgumentParser and attach the function's arguments
         parser = ArgumentParser(add_help=False)
         parser = function.add_cmdline_args(parser)
-        parsed_args = parser.parse_args(final_args)
+        parsed_func_args = parser.parse_args(final_args)
         
         
         
         if parsed_args.dry_run:
-            print(f"Function: {mod_str}\nArgs: {' '.join(args[2:])}")
+            print(f"Function: {mod_str}\nArgs: {' '.join(final_args)}")
         else:
             if parsed_args.verbose:
-                print(f"Executing {mod_str} {' '.join(args[2:])}")
-            function.execute(parsed_args)
+                print(f"Executing {mod_str} {' '.join(final_args)}")
+            function.execute(parsed_func_args)
 
     except DDOITranslatorModuleNotFoundException as e:
         print(e)

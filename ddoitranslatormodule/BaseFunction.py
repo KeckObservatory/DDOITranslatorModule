@@ -1,7 +1,7 @@
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException, DDOIConfigException, DDOIKTLTimeOut
 
 from logging import getLogger
-from argparse import ArgumentParser, Namespace, ArgumentTypeError
+from argparse import Namespace, ArgumentTypeError
 import configparser
 
 import copy
@@ -258,7 +258,7 @@ class TranslatorModuleFunction:
         return parser
 
     @staticmethod
-    def _add_bool_arg(parser, name, msg, default=None):
+    def _add_bool_arg(parser, name, msg, default=False):
         """
 
         :param parser: <configparser> The parser object.
@@ -279,10 +279,7 @@ class TranslatorModuleFunction:
             else:
                 raise ArgumentTypeError(f'Boolean value expected for: {name}.')
 
-        if not default:
-            arg_default = False
-
-        parser.add_argument(f'--{name}', action='store_true', type=_str_to_bool,
-                            default=arg_default, help=msg)
+        parser.add_argument(f'--{name}', type=_str_to_bool, default=default,
+                            help=msg)
         return parser
 

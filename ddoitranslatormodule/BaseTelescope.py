@@ -1,5 +1,5 @@
 from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
-from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIConfigFileException, DDOIConfigException, DDOIInvalidArguments, DDOIKTLTimeOut
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIInvalidArguments, DDOIKTLTimeOut
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOINotSelectedInstrument, DDOINoInstrumentDefined
 
 import os
@@ -72,7 +72,7 @@ class TelescopeBase(TranslatorModuleFunction):
 
         return val
 
-    def _write_to_kw(cls, cfg, ktl_service, key_val, logger, cls_name):
+    def _write_to_kw(cls, cfg, ktl_service, key_val, logger, cls_name, retry=True):
         """
         Write to KTL keywords while handling the Timeout Exception
 
@@ -95,11 +95,21 @@ class TelescopeBase(TranslatorModuleFunction):
             try:
                 ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
                 # ktl.read(ktl_service, ktl_name)
-            except ktl.TimeoutException:
-                msg = f"{cls_name} timeout sending offsets."
+            except ktl.TimeoutException as err:
+                msg = f"{cls_name} timeout writing to service: {ktl_service}, " \
+                      f"keyword: {ktl_name}, new value: {new_val}. Error: {err}."
                 if logger:
                     logger.error(msg)
-                raise DDOIKTLTimeOut(msg)
+                raise ktl.TimeoutException(msg)
+            except ktl.ktlError as err:
+                if retry:
+                    cls._write_to_kw(cls, cfg, ktl_service, key_val, logger,
+                                     cls_name, retry=False)
+                else:
+                    msg = f"{cls_name} error writing to service: {ktl_service}," \
+                          f" keyword: {ktl_name}, new value: {new_val}. " \
+                          f"Retried once,  KTL Error: {err}."
+                    raise ktl.ktlError(msg)
 
     def get_inst_name(cls, args, cfg, allow_current=True):
         """
@@ -149,7 +159,7 @@ class TelescopeBase(TranslatorModuleFunction):
         except ktl.TimeoutException:
             msg = f'timeout reading,  service {serv_name}, ' \
                   f'keyword: {ktl_instrument}'
-            raise DDOIKTLTimeOut(msg)
+            raise ktl.TimeoutException(msg)
 
         return inst.lower()
 

@@ -93,8 +93,8 @@ class TelescopeBase(TranslatorModuleFunction):
         for cfg_key, new_val in key_val.items():
             ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
             try:
-                ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
-                # ktl.read(ktl_service, ktl_name)
+                # ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
+                ktl.read(ktl_service, ktl_name)
             except ktl.TimeoutException as err:
                 msg = f"{cls_name} timeout writing to service: {ktl_service}, " \
                       f"keyword: {ktl_name}, new value: {new_val}. Error: {err}."
@@ -106,9 +106,12 @@ class TelescopeBase(TranslatorModuleFunction):
                     cls._write_to_kw(cls, cfg, ktl_service, key_val, logger,
                                      cls_name, retry=False)
                 else:
-                    msg = f"{cls_name} error writing to service: {ktl_service}," \
-                          f" keyword: {ktl_name}, new value: {new_val}. " \
-                          f"Retried once,  KTL Error: {err}."
+                    line_str = "="*80
+                    msg = f"\n\n{line_str}\n{cls_name} error writing to " \
+                          f"service: {ktl_service.upper()}, keyword: " \
+                          f"{ktl_name.upper()}, new value: {new_val}. \n\n" \
+                          f"Re-tried once. \n\n  KTL Error: {err}.\n" \
+                          f"{line_str}\n\n"
                     raise ktl.ktlError(msg)
 
     def get_inst_name(cls, args, cfg, allow_current=True):

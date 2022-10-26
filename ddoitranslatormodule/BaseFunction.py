@@ -268,7 +268,7 @@ class TranslatorModuleFunction:
         :return: <configparser> The parser object.
         """
 
-        def _str_to_bool(arg_val, name):
+        def _str_to_bool(arg_val):
             if isinstance(arg_val, bool):
                 return arg_val
 
@@ -277,7 +277,7 @@ class TranslatorModuleFunction:
             elif arg_val.lower() in ('no', 'false', 'f', 'n', '0'):
                 return False
             else:
-                raise ArgumentTypeError(f'Boolean value expected for: {name}.')
+                raise ArgumentTypeError(f'Boolean value expected.')
 
         parser.add_argument(f'--{name}', type=_str_to_bool, default=default,
                             help=msg)

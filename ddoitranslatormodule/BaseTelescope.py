@@ -46,7 +46,7 @@ class TelescopeBase(TranslatorModuleFunction):
         """
         insts = cls._cfg_val(cfg, 'inst_list', 'insts')
         insts = f'{insts}, {insts.lower()}'
-        inst_set = set(insts.split(', '))
+        inst_set = sorted(set(insts.split(', ')))
 
         help_str = "Name of instrument for the translator module."
         parser.add_argument("--instrument", type=str, choices=inst_set,
@@ -93,8 +93,8 @@ class TelescopeBase(TranslatorModuleFunction):
         for cfg_key, new_val in key_val.items():
             ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
             try:
-                # ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
-                ktl.read(ktl_service, ktl_name)
+                ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
+                # ktl.read(ktl_service, ktl_name)
             except ktl.TimeoutException as err:
                 msg = f"{cls_name} timeout writing to service: {ktl_service}, " \
                       f"keyword: {ktl_name}, new value: {new_val}. Error: {err}."

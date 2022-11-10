@@ -93,10 +93,13 @@ class TelescopeBase(TranslatorModuleFunction):
         for ktl_key, new_val in key_val.items():
             if cfg_key:
                 ktl_key = cls._cfg_val(cfg, ktl_service, ktl_key)
+            if logger:
+                logger.info(f"KTL write: {ktl_service} {ktl_key} {new_val}")
 
             try:
                 ktl.write(ktl_service, ktl_key, new_val, wait=True, timeout=2)
-                # ktl.read(ktl_service, ktl_key)
+                # print(ktl_key, new_val, type(new_val))
+                # print(f'reading {ktl_service} {ktl_key}:', ktl.read(ktl_service, ktl_key))
             except ktl.TimeoutException as err:
                 msg = f"{cls_name} timeout writing to service: {ktl_service}, " \
                       f"keyword: {ktl_key}, new value: {new_val}. Error: {err}."
@@ -114,48 +117,8 @@ class TelescopeBase(TranslatorModuleFunction):
                           f"{ktl_key.upper()}, new value: {new_val}. \n\n" \
                           f"Re-tried once. \n\n  KTL Error: {err}.\n" \
                           f"{line_str}\n\n"
-                    raise ktl.ktlError(msg)
-
-    def _write_to_kw_old(cls, cfg, ktl_service, key_val, logger, cls_name, retry=True):
-        """
-        Write to KTL keywords while handling the Timeout Exception
-
-        :param cfg:
-        :param ktl_service: The KTL service name
-        :param key_val: <dict> {cfg_key_name: new value}
-            cfg_key_name = the ktl_keyword_name in the config
-        :param logger: <DDOILoggerClient>, optional
-            The DDOILoggerClient that should be used. If none is provided,
-            defaults to a generic name specified in the config, by
-            default None
-        :param cls_name: The name of the calling class
-
-        :return: None
-        """
-        cfg_service = f'ktl_kw_{ktl_service}'
-
-        for cfg_key, new_val in key_val.items():
-            ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
-            try:
-                ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
-                # ktl.read(ktl_service, ktl_name)
-            except ktl.TimeoutException as err:
-                msg = f"{cls_name} timeout writing to service: {ktl_service}, " \
-                      f"keyword: {ktl_name}, new value: {new_val}. Error: {err}."
-                if logger:
-                    logger.error(msg)
-                raise ktl.TimeoutException(msg)
-            except ktl.ktlError as err:
-                if retry:
-                    cls._write_to_kw(cls, cfg, ktl_service, key_val, logger,
-                                     cls_name, retry=False)
-                else:
-                    line_str = "="*80
-                    msg = f"\n\n{line_str}\n{cls_name} error writing to " \
-                          f"service: {ktl_service.upper()}, keyword: " \
-                          f"{ktl_name.upper()}, new value: {new_val}. \n\n" \
-                          f"Re-tried once. \n\n  KTL Error: {err}.\n" \
-                          f"{line_str}\n\n"
+                    if logger:
+                        logger.error(msg)
                     raise ktl.ktlError(msg)
 
     def get_inst_name(cls, args, cfg, allow_current=True):

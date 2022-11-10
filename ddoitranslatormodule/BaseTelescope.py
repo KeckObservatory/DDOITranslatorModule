@@ -108,8 +108,9 @@ class TelescopeBase(TranslatorModuleFunction):
                 raise ktl.TimeoutException(msg)
             except ktl.ktlError as err:
                 if retry:
+                    logger.info(f"retrying,  KTL error: {err}")
                     cls._write_to_kw(cls, cfg, ktl_service, key_val, logger,
-                                     cls_name, retry=False)
+                                     cls_name, cfg_key=cfg_key, retry=False)
                 else:
                     line_str = "="*80
                     msg = f"\n\n{line_str}\n{cls_name} error writing to " \

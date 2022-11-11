@@ -1,15 +1,19 @@
-from email.policy import default
+import os
+import sys
 import importlib
 import traceback
-import sys
-import yaml
 import configparser
 from pathlib import Path
 from argparse import ArgumentParser
 from typing import Dict, List, Tuple
+import logging
+from datetime import datetime, timedelta
+
+import yaml
 
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOITranslatorModuleNotFoundException
 from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
+
 
 class LinkingTable():
     """Class storing the contents of a linking table
@@ -33,7 +37,7 @@ class LinkingTable():
         self.prefix = self.cfg['common']['prefix']
         self.suffix = self.cfg['common']['suffix']
         self.links = self.cfg['links']
-    
+
     def get_entry_points(self) -> List[str]:
         """Gets a list of all the entry points listed in the linking table
 
@@ -44,7 +48,7 @@ class LinkingTable():
         """
         eps = [key for key in self.links]
         return eps
-    
+
     def print_entry_points(self, prefix="") -> None:
         """Prints out all the entry points listed in the linking table
 
@@ -109,10 +113,12 @@ class LinkingTable():
         if 'args' in self.links[entry_point].keys():
             for arg in self.links[entry_point]['args']:
                 arg_index = arg.split("_")[1]
-                args.append((int(arg_index), self.links[entry_point]['args'][arg]))
+                args.append(
+                    (int(arg_index), self.links[entry_point]['args'][arg]))
                 # Loop over these tuples and insert them into the execution args
                 # i.e. args.insert(idx = tup[0], arg=tup[1])
         return link, args
+
 
 def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str]:
     """Searches a linking table for a given key, and attempts to fetch the
@@ -139,7 +145,8 @@ def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str
 
     # Check to see if there is an entry matching the given key
     if key not in linking_tbl.get_entry_points():
-        raise DDOITranslatorModuleNotFoundException(f"Unable to find an import for {key}")
+        raise DDOITranslatorModuleNotFoundException(
+            f"Unable to find an import for {key}")
     link, default_args = linking_tbl.get_link_and_args(key)
 
     # Get only the module path
@@ -148,11 +155,11 @@ def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str
     module_str = ".".join(link_elements[:-1])
     # Get only the class name
     class_str = link_elements[-1]
-    
+
     try:
         # Try to import the package from the string in the linking table
         mod = importlib.import_module(module_str)
-       
+
         try:
             return getattr(mod, class_str), default_args, link
         except:
@@ -164,10 +171,33 @@ def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str
         print(traceback.format_exc())
         return None, None, None
 
+def create_logger():
+    log = logging.getLogger('cli_interface')
+    log.setLevel(logging.DEBUG)
+    ## Set up console output
+    LogConsoleHandler = logging.StreamHandler()
+    LogConsoleHandler.setLevel(logging.INFO)
+    LogFormat = logging.Formatter('%(asctime)s:%(filename)s:%(levelname)8s: %(message)s')
+    LogConsoleHandler.setFormatter(LogFormat)
+    log.addHandler(LogConsoleHandler)
+    ## Set up file output
+    utnow = datetime.utcnow()
+    date = utnow-timedelta(days=1)
+    date_str = date.strftime('%Y%b%d').lower()
+    logdir = Path(f"/s/sdata1701/{os.getlogin()}/{date_str}/logs")
+    if logdir.exists() is False:
+        logdir.mkdir(parents=True)
+    LogFileName = logdir / 'cli_interface.log'
+    LogFileHandler = logging.FileHandler(LogFileName)
+    LogFileHandler.setLevel(logging.DEBUG)
+    LogFileHandler.setFormatter(LogFormat)
+    log.addHandler(LogFileHandler)
+    return log
+
 def main():
 
     #
-    ### Build the linking table
+    # Build the linking table
     #
 
     table_loc = Path(__file__).parent / "linking_table.yml"
@@ -178,23 +208,30 @@ def main():
     linking_tbl = LinkingTable(table_loc)
 
     #
-    ### Handle command line arguments
+    # Handle command line arguments
     #
-    
+
     parser = ArgumentParser(add_help=False)
-    parser.add_argument("-l", "--list", dest="list", action="store_true", help="List functions in this module")
-    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="Print what function would be called with what arguments, with no actual invocation")
+    parser.add_argument("-l", "--list", dest="list",
+                        action="store_true", help="List functions in this module")
+    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true",
+                        help="Print what function would be called with what arguments, with no actual invocation")
     parser.add_argument("-h", "--help", dest="help", action="store_true")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print extra information")
-    parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
+    parser.add_argument("-v", "--verbose", dest="verbose",
+                        action="store_true", help="Print extra information")
+    parser.add_argument("-f", "--file", dest="file",
+                        help="JSON or YAML OB file to add to arguments")
+    parser.add_argument("function_args", nargs="*",
+                        help="Function to be executed, and any needed arguments")
     parsed_args = parser.parse_args()
-    
+
     # Help:
     if parsed_args.help:
         # If this is help for a specific module:
         if len(parsed_args.function_args):
             try:
-                function, preset_args, mod_str = get_linked_function(linking_tbl, parsed_args.function_args[0])
+                function, preset_args, mod_str = get_linked_function(
+                    linking_tbl, parsed_args.function_args[0])
                 func_parser = ArgumentParser()
                 func_parser = function.add_cmdline_args(func_parser)
                 func_parser.print_help()
@@ -215,41 +252,88 @@ def main():
         linking_tbl.print_entry_points()
         return
 
+    #
+    # Logging
+    #
 
+    logger = create_logger()
+    logger.debug("Created logger")
     #
-    ### Handle Execution
+    # Handle Execution
     #
-    
+
     try:
 
         # Get the function
-        function, args, mod_str = get_linked_function(linking_tbl, parsed_args.function_args[0])
-        
+        logger.debug(f"Fetching {parsed_args.function_args[0]}...")
+        function, args, mod_str = get_linked_function(
+            linking_tbl, parsed_args.function_args[0])
+        logger.debug(f"Found at {mod_str}")
+
         # Insert required default arguments
+        logger.debug(f"Inserting default arguments")
         final_args = parsed_args.function_args[1:]
         for arg_tup in args:
             final_args.insert(arg_tup[0], str(arg_tup[1]))
-        
+
         # Build an ArgumentParser and attach the function's arguments
         parser = ArgumentParser(add_help=False)
+        logger.debug(f"Adding CLI args to parser")
         parser = function.add_cmdline_args(parser)
+        logger.debug("Parsing...")
         parsed_func_args = parser.parse_args(final_args)
-        
-        
-        
+
+        """
+        if parsed_args.file:
+            logger.warn("File functionality is untested. Use at your own risk")
+            logger.info(f"Found an input file: {parsed_args.file}")
+            # There is a JSON or YAML file that needs reading!
+            # Read it, based on file extension
+            if [".yml", ".yaml"] in parsed_args.file:
+                import yaml
+                with open(parsed_args.file, "r") as stream:
+                    try:
+                        OB = yaml.safe_load(stream)
+                        parsed_func_args['OB'] = OB
+                    except yaml.YAMLError as e:
+                        logger.error(f"Failed to load {parsed_args.file}")
+                        logger.error(e)
+                        return
+            elif [".json"] in parsed_args.file:
+                import json
+                with open(parsed_args.file, "r") as stream:
+                    try:
+                        OB = json.load(stream)
+                        parsed_func_args['OB'] = OB
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to load {parsed_args.file}")
+                        logger.error(e)
+                        return
+                    
+            else:
+                logger.error(
+                    "Filetype is not supported. I understand [.yaml, .yml, .json]")
+                return
+        """
         if parsed_args.dry_run:
-            print(f"Function: {mod_str}\nArgs: {' '.join(final_args)}")
+            logger.info("Dry run:")
+            logger.info(f"Function: {mod_str}\nArgs: {' '.join(final_args)}")
+
         else:
             if parsed_args.verbose:
                 print(f"Executing {mod_str} {' '.join(final_args)}")
-            function.execute(parsed_func_args)
+            logger.info(f"Executing {mod_str} {' '.join(final_args)}")
+            function.execute(parsed_func_args, logger=logger)
 
     except DDOITranslatorModuleNotFoundException as e:
-        print(e)
+        logger.error("Failed to find Translator Module")
+        logger.error(e)
     except ImportError as e:
-        print(e)
+        logger.error("Failed to import Translator Module")
+        logger.error(e)
     except TypeError as e:
-        print(traceback.format_exc())
+        logger.error(traceback.format_exc())
+
 
 if __name__ == "__main__":
     main()

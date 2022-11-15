@@ -4,7 +4,7 @@ import importlib
 import traceback
 import configparser
 from pathlib import Path
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentError
 from typing import Dict, List, Tuple
 import logging
 from datetime import datetime, timedelta
@@ -212,17 +212,12 @@ def main():
     #
 
     parser = ArgumentParser(add_help=False)
-    parser.add_argument("-l", "--list", dest="list",
-                        action="store_true", help="List functions in this module")
-    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true",
-                        help="Print what function would be called with what arguments, with no actual invocation")
+    parser.add_argument("-l", "--list", dest="list", action="store_true", help="List functions in this module")
+    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="Print what function would be called with what arguments, with no actual invocation")
     parser.add_argument("-h", "--help", dest="help", action="store_true")
-    parser.add_argument("-v", "--verbose", dest="verbose",
-                        action="store_true", help="Print extra information")
-    parser.add_argument("-f", "--file", dest="file",
-                        help="JSON or YAML OB file to add to arguments")
-    parser.add_argument("function_args", nargs="*",
-                        help="Function to be executed, and any needed arguments")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print extra information")
+    parser.add_argument("-f", "--file", dest="file", help="JSON or YAML OB file to add to arguments")
+    parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
     parsed_args = parser.parse_args()
 
     # Help:
@@ -281,8 +276,12 @@ def main():
         logger.debug(f"Adding CLI args to parser")
         parser = function.add_cmdline_args(parser)
         logger.debug("Parsing...")
-        parsed_func_args = parser.parse_args(final_args)
-
+        try:
+            parsed_func_args = parser.parse_args(final_args)
+        except ArgumentError as e:
+            logger.error("Failed to parse arguments!")
+            logger.error(e)
+            print(e)
         """
         if parsed_args.file:
             logger.warn("File functionality is untested. Use at your own risk")
@@ -333,6 +332,9 @@ def main():
         logger.error(e)
     except TypeError as e:
         logger.error(traceback.format_exc())
+    except Exception as e:
+        logger.error("Unexpected exception encountered in CLI:")
+        logger.error(e)
 
 
 if __name__ == "__main__":

@@ -283,7 +283,7 @@ def main():
             logger.error(e)
             print(e)
             sys.exit(1)
-            return
+            
         """
         if parsed_args.file:
             logger.warn("File functionality is untested. Use at your own risk")

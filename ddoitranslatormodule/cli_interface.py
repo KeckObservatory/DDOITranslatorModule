@@ -282,6 +282,8 @@ def main():
             logger.error("Failed to parse arguments!")
             logger.error(e)
             print(e)
+            sys.exit(1)
+            return
         """
         if parsed_args.file:
             logger.warn("File functionality is untested. Use at your own risk")
@@ -327,14 +329,21 @@ def main():
     except DDOITranslatorModuleNotFoundException as e:
         logger.error("Failed to find Translator Module")
         logger.error(e)
+        sys.exit(1)
     except ImportError as e:
-        logger.error("Failed to import Translator Module")
+        logger.error("Found translator module, but failed to import it")
         logger.error(e)
+        sys.exit(1)
     except TypeError as e:
         logger.error(traceback.format_exc())
+        sys.exit(1)
     except Exception as e:
         logger.error("Unexpected exception encountered in CLI:")
         logger.error(e)
+        sys.exit(1)
+    
+    # Not strictly needed, but it's nice to be explicit
+    sys.exit(0)
 
 
 if __name__ == "__main__":

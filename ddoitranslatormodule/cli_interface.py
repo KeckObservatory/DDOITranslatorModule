@@ -211,14 +211,14 @@ def main():
     # Handle command line arguments
     #
 
-    parser = ArgumentParser(add_help=False)
-    parser.add_argument("-l", "--list", dest="list", action="store_true", help="List functions in this module")
-    parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="Print what function would be called with what arguments, with no actual invocation")
-    parser.add_argument("-h", "--help", dest="help", action="store_true")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print extra information")
-    parser.add_argument("-f", "--file", dest="file", help="JSON or YAML OB file to add to arguments")
-    parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
-    parsed_args = parser.parse_args()
+    cli_parser = ArgumentParser(add_help=False, conflict_handler="resolve")
+    cli_parser.add_argument("-l", "--list", dest="list", action="store_true", help="List functions in this module")
+    cli_parser.add_argument("-n", "--dry-run", dest="dry_run", action="store_true", help="Print what function would be called with what arguments, with no actual invocation")
+    cli_parser.add_argument("-h", "--help", dest="help", action="store_true")
+    cli_parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print extra information")
+    cli_parser.add_argument("-f", "--file", dest="file", help="JSON or YAML OB file to add to arguments")
+    cli_parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
+    parsed_args = cli_parser.parse_args()
 
     # Help:
     if parsed_args.help:
@@ -240,7 +240,7 @@ def main():
                 linking_tbl.print_entry_points("   ")
         # Print help for using this CLI script
         else:
-            parser.print_help()
+            cli_parser.print_help()
         return
     # List:
     if parsed_args.list:

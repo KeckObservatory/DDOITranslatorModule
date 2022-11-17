@@ -202,6 +202,8 @@ def main():
 
     logger = create_logger()
     logger.debug("Created logger")
+    invocation = ' '.join(sys.argv)
+    logger.debug(f"Invocation: {invocation}")
 
     #
     # Build the linking table
@@ -282,9 +284,10 @@ def main():
         parser = ArgumentParser(add_help=False)
         logger.debug(f"Adding CLI args to parser")
         parser = function.add_cmdline_args(parser)
-        logger.debug("Parsing...")
+        logger.debug("Parsing function arguments...")
         try:
             parsed_func_args = parser.parse_args(final_args)
+            logger.debug("Parsed.")
         except ArgumentError as e:
             logger.error("Failed to parse arguments!")
             logger.error(e)

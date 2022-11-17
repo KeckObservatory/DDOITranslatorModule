@@ -228,7 +228,7 @@ def main():
     cli_parser.add_argument("-f", "--file", dest="file", help="JSON or YAML OB file to add to arguments")
     # cli_parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
     logger.debug("Parsing cli_interface.py arguments...")
-    parsed_args, function_args = cli_parser.parse_known_args()[0]
+    parsed_args, function_args = cli_parser.parse_known_args()
     logger.debug("Parsed.")
 
     # Help:

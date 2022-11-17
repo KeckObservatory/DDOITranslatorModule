@@ -333,7 +333,7 @@ def main():
         else:
             if parsed_args.verbose:
                 print(f"Executing {mod_str} {' '.join(final_args)}")
-            logger.info(f"Executing {mod_str} {' '.join(final_args)}")
+            logger.debug(f"Executing {mod_str} {' '.join(final_args)}")
             function.execute(parsed_func_args, logger=logger)
 
     except DDOITranslatorModuleNotFoundException as e:

@@ -197,14 +197,21 @@ def create_logger():
 def main():
 
     #
+    # Logging
+    #
+
+    logger = create_logger()
+    logger.debug("Created logger")
+
+    #
     # Build the linking table
     #
 
     table_loc = Path(__file__).parent / "linking_table.yml"
     if not table_loc.exists():
-        print(f"Failed to find a linking table at {str(table_loc)}")
-        print("Exiting...")
-        return
+        logger.error(f"Failed to find a linking table at {str(table_loc)}")
+        logger.error("Exiting...")
+        sys.exit(1)
     linking_tbl = LinkingTable(table_loc)
 
     #
@@ -218,10 +225,13 @@ def main():
     cli_parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print extra information")
     cli_parser.add_argument("-f", "--file", dest="file", help="JSON or YAML OB file to add to arguments")
     cli_parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
-    parsed_args = cli_parser.parse_args()
+    logger.debug("Parsing cli_interface.py arguments...")
+    parsed_args = cli_parser.parse_known_args()[0]
+    logger.debug("Parsed.")
 
     # Help:
     if parsed_args.help:
+        logger.debug("Printing help...")
         # If this is help for a specific module:
         if len(parsed_args.function_args):
             try:
@@ -246,15 +256,10 @@ def main():
         return
     # List:
     if parsed_args.list:
+        logger.debug("Printing list...")
         linking_tbl.print_entry_points()
         return
 
-    #
-    # Logging
-    #
-
-    logger = create_logger()
-    logger.debug("Created logger")
     #
     # Handle Execution
     #

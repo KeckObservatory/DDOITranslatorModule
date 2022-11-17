@@ -226,19 +226,19 @@ def main():
     cli_parser.add_argument("-h", "--help", dest="help", action="store_true")
     cli_parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="Print extra information")
     cli_parser.add_argument("-f", "--file", dest="file", help="JSON or YAML OB file to add to arguments")
-    cli_parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
+    # cli_parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
     logger.debug("Parsing cli_interface.py arguments...")
-    parsed_args = cli_parser.parse_known_args()[0]
+    parsed_args, function_args = cli_parser.parse_known_args()[0]
     logger.debug("Parsed.")
 
     # Help:
     if parsed_args.help:
         logger.debug("Printing help...")
         # If this is help for a specific module:
-        if len(parsed_args.function_args):
+        if len(function_args):
             try:
                 function, preset_args, mod_str = get_linked_function(
-                    linking_tbl, parsed_args.function_args[0])
+                    linking_tbl, function_args[0])
                 func_parser = ArgumentParser(add_help=False)
                 func_parser = function.add_cmdline_args(func_parser)
                 func_parser.print_help()
@@ -269,14 +269,14 @@ def main():
     try:
 
         # Get the function
-        logger.debug(f"Fetching {parsed_args.function_args[0]}...")
+        logger.debug(f"Fetching {function_args[0]}...")
         function, args, mod_str = get_linked_function(
-            linking_tbl, parsed_args.function_args[0])
+            linking_tbl, function_args[0])
         logger.debug(f"Found at {mod_str}")
 
         # Insert required default arguments
         logger.debug(f"Inserting default arguments")
-        final_args = parsed_args.function_args[1:]
+        final_args = function_args[1:]
         for arg_tup in args:
             final_args.insert(arg_tup[0], str(arg_tup[1]))
 

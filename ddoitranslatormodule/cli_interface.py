@@ -227,12 +227,14 @@ def main():
             try:
                 function, preset_args, mod_str = get_linked_function(
                     linking_tbl, parsed_args.function_args[0])
-                func_parser = ArgumentParser()
+                func_parser = ArgumentParser(add_help=False)
                 func_parser = function.add_cmdline_args(func_parser)
                 func_parser.print_help()
                 if parsed_args.verbose:
                     print(function.__doc__)
-                print(preset_args)
+                if preset_args and len(preset_args) > 0:
+                    print("Preset arguments:")
+                    print(preset_args)
                 # figure out how to access the argparse from outside, and print the -h
             except DDOITranslatorModuleNotFoundException as e:
                 print(e)

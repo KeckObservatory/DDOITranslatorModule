@@ -72,7 +72,8 @@ class TelescopeBase(TranslatorModuleFunction):
 
         return val
 
-    def _write_to_kw(cls, cfg, ktl_service, key_val, logger, cls_name, retry=True):
+    def _write_to_kw(cls, cfg, ktl_service, key_val, logger, cls_name,
+                     cfg_key=False, retry=True):
         """
         Write to KTL keywords while handling the Timeout Exception
 
@@ -88,30 +89,37 @@ class TelescopeBase(TranslatorModuleFunction):
 
         :return: None
         """
-        cfg_service = f'ktl_kw_{ktl_service}'
 
-        for cfg_key, new_val in key_val.items():
-            ktl_name = cls._cfg_val(cfg, cfg_service, cfg_key)
+        for ktl_key, new_val in key_val.items():
+            if cfg_key:
+                ktl_key = cls._cfg_val(cfg, ktl_service, ktl_key)
+            if logger:
+                logger.info(f"KTL write: {ktl_service} {ktl_key} {new_val}")
+
             try:
-                ktl.write(ktl_service, ktl_name, new_val, wait=True, timeout=2)
-                # ktl.read(ktl_service, ktl_name)
+                ktl.write(ktl_service, ktl_key, new_val, wait=True, timeout=2)
+                # print(ktl_key, new_val, type(new_val))
+                # print(f'reading {ktl_service} {ktl_key}:', ktl.read(ktl_service, ktl_key))
             except ktl.TimeoutException as err:
                 msg = f"{cls_name} timeout writing to service: {ktl_service}, " \
-                      f"keyword: {ktl_name}, new value: {new_val}. Error: {err}."
+                      f"keyword: {ktl_key}, new value: {new_val}. Error: {err}."
                 if logger:
                     logger.error(msg)
                 raise ktl.TimeoutException(msg)
             except ktl.ktlError as err:
                 if retry:
+                    logger.info(f"retrying,  KTL error: {err}")
                     cls._write_to_kw(cls, cfg, ktl_service, key_val, logger,
-                                     cls_name, retry=False)
+                                     cls_name, cfg_key=cfg_key, retry=False)
                 else:
                     line_str = "="*80
                     msg = f"\n\n{line_str}\n{cls_name} error writing to " \
                           f"service: {ktl_service.upper()}, keyword: " \
-                          f"{ktl_name.upper()}, new value: {new_val}. \n\n" \
+                          f"{ktl_key.upper()}, new value: {new_val}. \n\n" \
                           f"Re-tried once. \n\n  KTL Error: {err}.\n" \
                           f"{line_str}\n\n"
+                    if logger:
+                        logger.error(msg)
                     raise ktl.ktlError(msg)
 
     def get_inst_name(cls, args, cfg, allow_current=True):
@@ -150,12 +158,11 @@ class TelescopeBase(TranslatorModuleFunction):
         :param cfg:
         :return:
         """
+        serv_name = 'dcs'
         if cfg:
             ktl_instrument = cls._cfg_val(cfg, 'ktl_kw_dcs', 'instrument')
-            serv_name = cls._cfg_val(cfg, 'ktl_serv', 'dcs')
         else:
             ktl_instrument = 'instrume'
-            serv_name = 'dcs'
 
         try:
             inst = ktl.read(serv_name, ktl_instrument, timeout=2)

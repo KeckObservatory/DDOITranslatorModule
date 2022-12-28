@@ -210,6 +210,7 @@ def main(table_loc, args):
     #
 
     #table_loc = Path(__file__).parent / "linking_table.yml"
+    table_loc = Path(table_loc)
     if not table_loc.endswith(".yml"):
         logger.error("Linking table must be a .yml file! Exiting...")
         sys.exit(1)

@@ -281,7 +281,7 @@ def main(table_loc, args):
         # Get the function
         logger.debug(f"Fetching {function_args[0]}...")
         function, args, mod_str = get_linked_function(
-            linking_tbl, function_args[0])
+            linking_tbl, function_args[0], logger)
         logger.debug(f"Found at {mod_str}")
 
         # Insert required default arguments

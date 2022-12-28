@@ -1,3 +1,5 @@
+#! /usr/bin/env kpython3
+
 """
 This script is the primary entry point to the translator module from the command line.
 It does three important things:

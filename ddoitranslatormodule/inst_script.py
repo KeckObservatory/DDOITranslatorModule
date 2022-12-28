@@ -18,7 +18,7 @@ server_location = "" # When running on a ddoiserver, this should be set to none 
 translator_module_location = "/ddoi/KPFTranslator/default/KPFTranslator"
 
 # Where is the linking table?
-linking_table_location = f"{server_location}/{translator_module_location}/kpf/linking_table.yml"
+linking_table_location = f"{server_location}{'/' if server_location else ''}{translator_module_location}/kpf/linking_table.yml"
 
 
 # Add the cli script to import path

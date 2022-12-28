@@ -295,7 +295,7 @@ def main(table_loc, args):
         if parsed_args.file:
             logger.info(f"Found an input file: {parsed_args.file}")
             # Load the file
-            if [".yml", ".yaml"] in parsed_args.file:
+            if ".yml" in parsed_args.file:
                 import yaml
                 with open(parsed_args.file, "r") as stream:
                     try:
@@ -305,7 +305,7 @@ def main(table_loc, args):
                         logger.error(f"Failed to load {parsed_args.file}")
                         logger.error(e)
                         return
-            elif [".json"] in parsed_args.file:
+            elif ".json" in parsed_args.file:
                 import json
                 with open(parsed_args.file, "r") as stream:
                     try:
@@ -318,7 +318,7 @@ def main(table_loc, args):
 
             else:
                 logger.error(
-                    "Filetype is not supported. I understand [.yaml, .yml, .json]")
+                    "Filetype is not supported. I understand [.yml, .json]")
                 return
         
         else: # If there isn't a file, parse from the command line

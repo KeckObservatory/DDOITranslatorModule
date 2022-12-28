@@ -291,20 +291,6 @@ def main(table_loc, args):
         for arg_tup in args:
             final_args.insert(arg_tup[0], str(arg_tup[1]))
 
-        # Build an ArgumentParser and attach the function's arguments
-        parser = ArgumentParser(add_help=False)
-        logger.debug(f"Adding CLI args to parser")
-        parser = function.add_cmdline_args(parser)
-        logger.debug("Parsing function arguments...")
-        try:
-            parsed_func_args = parser.parse_args(final_args)
-            logger.debug("Parsed.")
-        except ArgumentError as e:
-            logger.error("Failed to parse arguments!")
-            logger.error(e)
-            print(e)
-            sys.exit(1)
-
         # If there is an arguments file, load it
         if parsed_args.file:
             logger.info(f"Found an input file: {parsed_args.file}")
@@ -314,7 +300,7 @@ def main(table_loc, args):
                 with open(parsed_args.file, "r") as stream:
                     try:
                         OB = yaml.safe_load(stream)
-                        parsed_func_args['OB'] = OB
+                        parsed_func_args = OB
                     except yaml.YAMLError as e:
                         logger.error(f"Failed to load {parsed_args.file}")
                         logger.error(e)
@@ -324,22 +310,33 @@ def main(table_loc, args):
                 with open(parsed_args.file, "r") as stream:
                     try:
                         OB = json.load(stream)
-                        parsed_func_args['OB'] = OB
+                        parsed_func_args = OB
                     except json.JSONDecodeError as e:
                         logger.error(f"Failed to load {parsed_args.file}")
                         logger.error(e)
                         return
-                        
-            # Overwrite the appropriate keys
-            for key in parsed_func_args['OB']:
-                if key in parsed_func_args:
-                    parsed_func_args[key] = parsed_func_args["OB"][key]
-                else:
-                    logger.warn("Encountered an unknown key: {key}! Continuing...")
+
             else:
                 logger.error(
                     "Filetype is not supported. I understand [.yaml, .yml, .json]")
                 return
+        
+        else: # If there isn't a file, parse from the command line
+            
+            # Build an ArgumentParser and attach the function's arguments
+            parser = ArgumentParser(add_help=False)
+            logger.debug(f"Adding CLI args to parser")
+            parser = function.add_cmdline_args(parser)
+            logger.debug("Parsing function arguments...")
+            try:
+                parsed_func_args = parser.parse_args(final_args)
+                logger.debug("Parsed.")
+            except ArgumentError as e:
+                logger.error("Failed to parse arguments!")
+                logger.error(e)
+                print(e)
+                sys.exit(1)
+
 
         if parsed_args.dry_run:
             logger.info("Dry run:")

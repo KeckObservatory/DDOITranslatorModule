@@ -241,7 +241,7 @@ def main(table_loc, args):
     parsed_args, function_args = cli_parser.parse_known_args(args)
     logger.debug("Parsed.")
 
-    # Help:
+    # Handle help:
     if parsed_args.help:
         logger.debug("Printing help...")
         # If this is help for a specific module:
@@ -266,7 +266,8 @@ def main(table_loc, args):
         else:
             cli_parser.print_help()
         return
-    # List:
+    
+    # Handle list:
     if parsed_args.list:
         logger.debug("Printing list...")
         linking_tbl.print_entry_points()
@@ -303,13 +304,11 @@ def main(table_loc, args):
             logger.error(e)
             print(e)
             sys.exit(1)
-            
-        """
+
+        # If there is an arguments file, load it
         if parsed_args.file:
-            logger.warn("File functionality is untested. Use at your own risk")
             logger.info(f"Found an input file: {parsed_args.file}")
-            # There is a JSON or YAML file that needs reading!
-            # Read it, based on file extension
+            # Load the file
             if [".yml", ".yaml"] in parsed_args.file:
                 import yaml
                 with open(parsed_args.file, "r") as stream:
@@ -330,12 +329,18 @@ def main(table_loc, args):
                         logger.error(f"Failed to load {parsed_args.file}")
                         logger.error(e)
                         return
-                    
+                        
+            # Overwrite the appropriate keys
+            for key in parsed_func_args['OB']:
+                if key in parsed_func_args:
+                    parsed_func_args[key] = parsed_func_args["OB"][key]
+                else:
+                    logger.warn("Encountered an unknown key: {key}! Continuing...")
             else:
                 logger.error(
                     "Filetype is not supported. I understand [.yaml, .yml, .json]")
                 return
-        """
+
         if parsed_args.dry_run:
             logger.info("Dry run:")
             logger.info(f"Function: {mod_str}\nArgs: {' '.join(final_args)}")

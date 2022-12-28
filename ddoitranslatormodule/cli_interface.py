@@ -19,24 +19,31 @@ class LinkingTable():
     """Class storing the contents of a linking table
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, logger):
         """Create the LinkingTable
 
         Parameters
         ----------
         filename : str
             Filepath to the linking table
+        
+        logger : logging.Logger
+            Python logging instance
         """
+
+        self.logger = logger
+
         try:
             with open(filename) as f:
                 self.cfg = yaml.load(f, Loader=yaml.FullLoader)
         except:
-            print(f"Unable to load {filename}")
+            logger.error(f"Linking Table: Unable to load {filename}")
             return
 
         self.prefix = self.cfg['common']['prefix']
         self.suffix = self.cfg['common']['suffix']
         self.links = self.cfg['links']
+        logger.debug(f"Linking Table: Loading prefix: {self.prefix}, suffix: {self.suffix}, with {len(self.links)} links.")
 
     def get_entry_points(self) -> List[str]:
         """Gets a list of all the entry points listed in the linking table
@@ -217,7 +224,7 @@ def main(table_loc, args):
     if not table_loc.exists():
         logger.error(f"Failed to find a linking table at {str(table_loc)}. Exiting...")
         sys.exit(1)
-    linking_tbl = LinkingTable(table_loc)
+    linking_tbl = LinkingTable(table_loc, logger)
 
     #
     # Handle command line arguments

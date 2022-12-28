@@ -6,10 +6,10 @@ linking_table_location = f"{server_location}/{translator_module_location}/kpf/li
 
 
 # Add the cli script to impport path
-sys.path.add(0, f"{server_location}/ddoi/DDOITranslatorModule/default/DDOITranslatorModule")
+sys.path.insert(0, f"{server_location}/ddoi/DDOITranslatorModule/default/DDOITranslatorModule")
 import ddoitranslatormodule.cli_interface as cli
 
 # Add the translator module to the python path
-sys.path.add(0, f"{server_location}/{translator_module_location}")
+sys.path.insert(0, f"{server_location}/{translator_module_location}")
 
 cli.main(linking_table_location, sys.argv[1:])

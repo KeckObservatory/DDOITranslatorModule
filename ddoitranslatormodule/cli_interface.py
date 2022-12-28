@@ -40,7 +40,7 @@ class LinkingTable():
         except:
             logger.error(f"Linking Table: Unable to load {filename}")
             return
-
+        logger.debug(f"Config loaded: {self.cfg}")
         self.prefix = self.cfg['common']['prefix']
         self.suffix = self.cfg['common']['suffix']
         self.links = self.cfg['links']

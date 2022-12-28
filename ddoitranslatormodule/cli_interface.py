@@ -32,6 +32,7 @@ class LinkingTable():
         """
 
         self.logger = logger
+        logger.debug(f"Linking Table: Loading file at {filename}")
 
         try:
             with open(filename) as f:

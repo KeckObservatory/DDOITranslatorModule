@@ -40,7 +40,6 @@ class LinkingTable():
         except:
             logger.error(f"Linking Table: Unable to load {filename}")
             return
-        logger.debug(f"Config loaded: {self.cfg}")
         self.prefix = self.cfg['common']['prefix']
         self.suffix = self.cfg['common']['suffix']
         self.links = self.cfg['links']
@@ -128,7 +127,7 @@ class LinkingTable():
         return link, args
 
 
-def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str]:
+def get_linked_function(linking_tbl, key, logger) -> Tuple[TranslatorModuleFunction, str]:
     """Searches a linking table for a given key, and attempts to fetch the
     associated python module
 
@@ -171,12 +170,12 @@ def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str
         try:
             return getattr(mod, class_str), default_args, link
         except:
-            print("Failed to find a class with a perform method")
+            logger.error("Failed to find a class with a perform method")
             return None, None, None
 
     except ImportError as e:
-        print(f"Failed to import {module_str}")
-        print(traceback.format_exc())
+        logger.error(f"Failed to import {module_str}")
+        logger.error(traceback.format_exc())
         return None, None, None
 
 def create_logger():
@@ -249,7 +248,7 @@ def main(table_loc, args):
         if len(function_args):
             try:
                 function, preset_args, mod_str = get_linked_function(
-                    linking_tbl, function_args[0])
+                    linking_tbl, function_args[0], logger)
                 func_parser = ArgumentParser(add_help=False)
                 func_parser = function.add_cmdline_args(func_parser)
                 func_parser.print_help()

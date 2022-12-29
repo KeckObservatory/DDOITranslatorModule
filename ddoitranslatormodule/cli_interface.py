@@ -191,7 +191,7 @@ def create_logger():
     utnow = datetime.utcnow()
     date = utnow-timedelta(days=1)
     date_str = date.strftime('%Y%b%d').lower()
-    logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
+    logdir = Path(f"~/kpflogs/{date_str}").expanduser()
     if logdir.exists() is False:
         logdir.mkdir(parents=True)
     LogFileName = logdir / 'cli_interface.log'

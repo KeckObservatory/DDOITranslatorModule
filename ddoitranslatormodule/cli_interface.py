@@ -293,7 +293,7 @@ def main(table_loc, args):
 
         # If there is an arguments file, load it
         if parsed_args.file:
-            logger.info(f"Found an input file: {parsed_args.file}")
+            logger.debug(f"Found an input file: {parsed_args.file}")
             # Load the file
             if ".yml" in parsed_args.file:
                 import yaml

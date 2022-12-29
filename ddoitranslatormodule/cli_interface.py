@@ -295,7 +295,7 @@ def main(table_loc, args):
         if parsed_args.file:
             logger.debug(f"Found an input file: {parsed_args.file}")
             # Load the file
-            if ".yml" in parsed_args.file:
+            if ".yml" in parsed_args.file or ".yaml" in parsed_args.file:
                 import yaml
                 with open(parsed_args.file, "r") as stream:
                     try:

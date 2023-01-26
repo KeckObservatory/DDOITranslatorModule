@@ -383,7 +383,9 @@ class TranslatorModuleFunction:
         out_args = {}
 
         for key in in_args:
-            newkey = config[key]
-            out_args[newkey] = in_args[key]
-        
+            try:
+                newkey = config[key]
+                out_args[newkey] = in_args[key]
+            except KeyError:
+                out_args[key] = in_args[key]
         return out_args

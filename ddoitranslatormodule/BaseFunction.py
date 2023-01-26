@@ -283,3 +283,107 @@ class TranslatorModuleFunction:
                             help=msg)
         return parser
 
+    @classmethod
+    def map_OB(cls, OB, sequence_number, cfg=None):
+        """Maps values in an OB to a dictionary of arguments to be parsed 
+        by the translator module functions. The parameters are loaded in the
+        following order, with each subsequent step overwriting any keys with
+        conflicting names:
+
+        1. target
+        2. acquisition             _
+        3. detector parameters      |
+        4. instrument parameters    |- from common_parameters
+        6. TCS parameters          _|
+        7. observation parameters
+
+
+        Parameters
+        ----------
+        OB : dict or dictlike
+            Observing Block, in dictionary form
+        cfg : path or pathlike
+            Location of the config file to use to map the OB
+
+        Returns
+        -------
+        dict
+            Dictionary of arguments to be passed into the translator
+        """
+
+
+        # Get the required args into a dictionary
+        in_args = {}
+
+        config = cls._load_config(cls, cfg)
+
+        def update_dict(dict_to_update, dic, keys):
+            """Searches through the `dic` dictionary using the list of provided
+            keys, and updates `dict_to_update` with the found values. If the
+            list of keys doesn't have a corresponding value, nothing is added.
+             
+            to_update = {
+                "a" : 1,
+                "b" : 2,
+                "d" : 4
+            }
+
+            OB = {
+                'target' :
+                    "parameters" :
+                        {
+                            "a" : 10,
+                            "b" : 20,
+                            "c" : 30
+                        }
+            }
+
+            update_dict(to_update, OB, ['target', 'parameters'])
+            update_dict(to_update, OB, ['target', 'not_a_key'])
+
+            update_dict:
+                {
+                    "a" : 10,
+                    "b" : 20,
+                    "c" : 30,
+                    "d" : 4
+                }
+
+            Parameters
+            ----------
+            dict_to_update : dict
+                Dictionary that should be updated
+            dic : dict
+                Dictionary that has the values that should be copied to the
+                inputer
+            keys : list
+                list of keys that lead to the dictionary that contains wanted 
+                values
+            """
+            for key in keys:
+                dic = dic.get(key, None)
+                if dic == None:
+                    # If this key doesn't go anywhere, return the dict unchanged
+                    return dict_to_update
+            # When we get here, we are at the dict we want to update with
+            dict_to_update.update(dic)
+
+        update_dict(in_args, OB, ['target', 'parameters'])
+        update_dict(in_args, OB, ['acquisition', 'parameters'])
+        update_dict(in_args, OB, ['common_parameters', 'detector_parameters'])
+        update_dict(in_args, OB, ['common_parameters', 'instrument_parameters'])
+        update_dict(in_args, OB, ['common_parameters', 'tcs_parameters'])
+
+        # get just this sequence
+        for observation in OB['observations']:
+            if observation['metadata']['sequence_number'] == sequence_number:
+                in_args.update(observation['parameters'])
+
+        # Map the arguments to their new keys using the config
+        out_args = {}
+
+        for key in in_args:
+            newkey = config[key]
+            out_args[newkey] = in_args[key]
+        
+        return out_args

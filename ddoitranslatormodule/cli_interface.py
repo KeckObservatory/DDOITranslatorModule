@@ -19,24 +19,31 @@ class LinkingTable():
     """Class storing the contents of a linking table
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, logger):
         """Create the LinkingTable
 
         Parameters
         ----------
         filename : str
             Filepath to the linking table
+        
+        logger : logging.Logger
+            Python logging instance
         """
+
+        self.logger = logger
+        logger.debug(f"Linking Table: Loading file at {filename}")
+
         try:
             with open(filename) as f:
                 self.cfg = yaml.load(f, Loader=yaml.FullLoader)
         except:
-            print(f"Unable to load {filename}")
+            logger.error(f"Linking Table: Unable to load {filename}")
             return
-
         self.prefix = self.cfg['common']['prefix']
         self.suffix = self.cfg['common']['suffix']
         self.links = self.cfg['links']
+        logger.debug(f"Linking Table: Loading prefix: {self.prefix}, suffix: {self.suffix}, with {len(self.links)} links.")
 
     def get_entry_points(self) -> List[str]:
         """Gets a list of all the entry points listed in the linking table
@@ -120,7 +127,7 @@ class LinkingTable():
         return link, args
 
 
-def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str]:
+def get_linked_function(linking_tbl, key, logger) -> Tuple[TranslatorModuleFunction, str]:
     """Searches a linking table for a given key, and attempts to fetch the
     associated python module
 
@@ -163,12 +170,12 @@ def get_linked_function(linking_tbl, key) -> Tuple[TranslatorModuleFunction, str
         try:
             return getattr(mod, class_str), default_args, link
         except:
-            print("Failed to find a class with a perform method")
+            logger.error("Failed to find a class with a perform method")
             return None, None, None
 
     except ImportError as e:
-        print(f"Failed to import {module_str}")
-        print(traceback.format_exc())
+        logger.error(f"Failed to import {module_str}")
+        logger.error(traceback.format_exc())
         return None, None, None
 
 def create_logger():
@@ -184,7 +191,7 @@ def create_logger():
     utnow = datetime.utcnow()
     date = utnow-timedelta(days=1)
     date_str = date.strftime('%Y%b%d').lower()
-    logdir = Path(f"/s/sdata1701/{os.getlogin()}/{date_str}/logs")
+    logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
     if logdir.exists() is False:
         logdir.mkdir(parents=True)
     LogFileName = logdir / 'cli_interface.log'
@@ -194,7 +201,7 @@ def create_logger():
     log.addHandler(LogFileHandler)
     return log
 
-def main():
+def main(table_loc, args):
 
     #
     # Logging
@@ -209,12 +216,15 @@ def main():
     # Build the linking table
     #
 
-    table_loc = Path(__file__).parent / "linking_table.yml"
-    if not table_loc.exists():
-        logger.error(f"Failed to find a linking table at {str(table_loc)}")
-        logger.error("Exiting...")
+    #table_loc = Path(__file__).parent / "linking_table.yml"
+    table_loc = Path(table_loc)
+    if not table_loc.suffix == ".yml":
+        logger.error("Linking table must be a .yml file! Exiting...")
         sys.exit(1)
-    linking_tbl = LinkingTable(table_loc)
+    if not table_loc.exists():
+        logger.error(f"Failed to find a linking table at {str(table_loc)}. Exiting...")
+        sys.exit(1)
+    linking_tbl = LinkingTable(table_loc, logger)
 
     #
     # Handle command line arguments
@@ -228,17 +238,17 @@ def main():
     cli_parser.add_argument("-f", "--file", dest="file", help="JSON or YAML OB file to add to arguments")
     # cli_parser.add_argument("function_args", nargs="*", help="Function to be executed, and any needed arguments")
     logger.debug("Parsing cli_interface.py arguments...")
-    parsed_args, function_args = cli_parser.parse_known_args()
+    parsed_args, function_args = cli_parser.parse_known_args(args)
     logger.debug("Parsed.")
 
-    # Help:
+    # Handle help:
     if parsed_args.help:
         logger.debug("Printing help...")
         # If this is help for a specific module:
         if len(function_args):
             try:
                 function, preset_args, mod_str = get_linked_function(
-                    linking_tbl, function_args[0])
+                    linking_tbl, function_args[0], logger)
                 func_parser = ArgumentParser(add_help=False)
                 func_parser = function.add_cmdline_args(func_parser)
                 func_parser.print_help()
@@ -256,7 +266,8 @@ def main():
         else:
             cli_parser.print_help()
         return
-    # List:
+    
+    # Handle list:
     if parsed_args.list:
         logger.debug("Printing list...")
         linking_tbl.print_entry_points()
@@ -271,7 +282,7 @@ def main():
         # Get the function
         logger.debug(f"Fetching {function_args[0]}...")
         function, args, mod_str = get_linked_function(
-            linking_tbl, function_args[0])
+            linking_tbl, function_args[0], logger)
         logger.debug(f"Found at {mod_str}")
 
         # Insert required default arguments
@@ -280,52 +291,53 @@ def main():
         for arg_tup in args:
             final_args.insert(arg_tup[0], str(arg_tup[1]))
 
-        # Build an ArgumentParser and attach the function's arguments
-        parser = ArgumentParser(add_help=False)
-        logger.debug(f"Adding CLI args to parser")
-        parser = function.add_cmdline_args(parser)
-        logger.debug("Parsing function arguments...")
-        try:
-            parsed_func_args = parser.parse_args(final_args)
-            logger.debug("Parsed.")
-        except ArgumentError as e:
-            logger.error("Failed to parse arguments!")
-            logger.error(e)
-            print(e)
-            sys.exit(1)
-            
-        """
+        # If there is an arguments file, load it
         if parsed_args.file:
-            logger.warn("File functionality is untested. Use at your own risk")
-            logger.info(f"Found an input file: {parsed_args.file}")
-            # There is a JSON or YAML file that needs reading!
-            # Read it, based on file extension
-            if [".yml", ".yaml"] in parsed_args.file:
+            logger.debug(f"Found an input file: {parsed_args.file}")
+            # Load the file
+            if ".yml" in parsed_args.file or ".yaml" in parsed_args.file:
                 import yaml
                 with open(parsed_args.file, "r") as stream:
                     try:
                         OB = yaml.safe_load(stream)
-                        parsed_func_args['OB'] = OB
+                        parsed_func_args = OB
                     except yaml.YAMLError as e:
                         logger.error(f"Failed to load {parsed_args.file}")
                         logger.error(e)
                         return
-            elif [".json"] in parsed_args.file:
+            elif ".json" in parsed_args.file:
                 import json
                 with open(parsed_args.file, "r") as stream:
                     try:
                         OB = json.load(stream)
-                        parsed_func_args['OB'] = OB
+                        parsed_func_args = OB
                     except json.JSONDecodeError as e:
                         logger.error(f"Failed to load {parsed_args.file}")
                         logger.error(e)
                         return
-                    
+
             else:
                 logger.error(
-                    "Filetype is not supported. I understand [.yaml, .yml, .json]")
+                    "Filetype is not supported. I understand [.yml, .json]")
                 return
-        """
+        
+        else: # If there isn't a file, parse from the command line
+            
+            # Build an ArgumentParser and attach the function's arguments
+            parser = ArgumentParser(add_help=False)
+            logger.debug(f"Adding CLI args to parser")
+            parser = function.add_cmdline_args(parser)
+            logger.debug("Parsing function arguments...")
+            try:
+                parsed_func_args = parser.parse_args(final_args)
+                logger.debug("Parsed.")
+            except ArgumentError as e:
+                logger.error("Failed to parse arguments!")
+                logger.error(e)
+                print(e)
+                sys.exit(1)
+
+
         if parsed_args.dry_run:
             logger.info("Dry run:")
             logger.info(f"Function: {mod_str}\nArgs: {' '.join(final_args)}")

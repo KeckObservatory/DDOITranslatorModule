@@ -334,7 +334,7 @@ def main(table_loc, args):
             except ArgumentError as e:
                 logger.error("Failed to parse arguments!")
                 logger.error(e)
-                print(e)
+                logger.error(traceback.format_exc())
                 sys.exit(1)
 
 

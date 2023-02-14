@@ -334,7 +334,7 @@ def main(table_loc, args):
             except ArgumentError as e:
                 logger.error("Failed to parse arguments!")
                 logger.error(e)
-                print(e)
+                logger.error(traceback.format_exc())
                 sys.exit(1)
 
 
@@ -351,10 +351,12 @@ def main(table_loc, args):
     except DDOITranslatorModuleNotFoundException as e:
         logger.error("Failed to find Translator Module")
         logger.error(e)
+        logger.error(traceback.format_exc())
         sys.exit(1)
     except ImportError as e:
         logger.error("Found translator module, but failed to import it")
         logger.error(e)
+        logger.error(traceback.format_exc())
         sys.exit(1)
     except TypeError as e:
         logger.error(traceback.format_exc())
@@ -362,6 +364,7 @@ def main(table_loc, args):
     except Exception as e:
         logger.error("Unexpected exception encountered in CLI:")
         logger.error(e)
+        logger.error(traceback.format_exc())
         sys.exit(1)
     
     # Not strictly needed, but it's nice to be explicit

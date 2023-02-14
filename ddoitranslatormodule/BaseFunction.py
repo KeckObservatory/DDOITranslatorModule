@@ -378,6 +378,7 @@ class TranslatorModuleFunction:
         for observation in OB['observations']:
             if observation['metadata']['sequence_number'] == sequence_number:
                 in_args.update(observation['parameters'])
+                in_args.update(observation['metadata'])
 
         # Map the arguments to their new keys using the config
         out_args = {}

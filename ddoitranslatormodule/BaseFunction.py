@@ -128,9 +128,25 @@ class TranslatorModuleFunction:
 
     @staticmethod
     def _diff_args(args1, args2):
+        """Compares two flat dictionaries to determine if any values from dict1
+        have been changed. Any keys present in dict2 that do not exist in dict1
+        are ignored
 
-        # Deep check if args1 == args2. This code may not be sufficient
-        # return args1 != args2
+        Parameters
+        ----------
+        args1 : dict
+            Primary dict to inspect
+        args2 : dict
+            Secondary dict to inspect
+
+        Returns
+        -------
+        bool
+            True if there is a difference, False otherwise
+        """    
+        for key in args1.keys():
+            if args1[key] != args2[key]:
+                return True
         return False
 
     """
@@ -369,7 +385,9 @@ class TranslatorModuleFunction:
             dict_to_update.update(dic)
 
         update_dict(in_args, OB, ['target', 'parameters'])
+        update_dict(in_args, OB, ['metadata'])
         update_dict(in_args, OB, ['acquisition', 'parameters'])
+        update_dict(in_args, OB, ['acquisition', 'metadata'])
         update_dict(in_args, OB, ['common_parameters', 'detector_parameters'])
         update_dict(in_args, OB, ['common_parameters', 'instrument_parameters'])
         update_dict(in_args, OB, ['common_parameters', 'tcs_parameters'])

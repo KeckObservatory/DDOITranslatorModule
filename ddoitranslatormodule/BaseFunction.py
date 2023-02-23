@@ -176,7 +176,7 @@ class TranslatorModuleFunction:
         elif param_type != str:
             raise DDOIConfigFileException(param_type, configparser.ConfigParser)
 
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(inline_comment_prefixes=(';','#',))
         config.read(config_files)
 
         return config
@@ -403,7 +403,7 @@ class TranslatorModuleFunction:
 
         for key in in_args:
             try:
-                newkey = config[key]
+                newkey = config['ob_keys'][key]
                 out_args[newkey] = in_args[key]
             except KeyError:
                 out_args[key] = in_args[key]

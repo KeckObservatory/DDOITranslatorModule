@@ -1,4 +1,4 @@
-from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException, DDOIConfigException, DDOIKTLTimeOut
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import *
 
 from logging import getLogger
 from argparse import Namespace, ArgumentTypeError
@@ -70,28 +70,83 @@ class TranslatorModuleFunction:
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
 
-        # Check the pre-condition
-        if not cls.pre_condition(args, logger, cfg):
-            return False
 
-        # Make sure that the pre-condition did not alter the arguments
-        args_diff = cls._diff_args(args, initial_args)
-        if args_diff:
-            raise DDOIArgumentsChangedException(
-                f"Arguments changed after executing pre-condition: {args_diff}")
+        #################
+        # PRE CONDITION #
+        #################
+        try:
+            cls.pre_condition(args, logger, cfg)
+        except Exception as e:
+            logger.error(f"Exception encountered in pre-condition: {e}")
+            logger.error(e.with_traceback(), exc_info=True)
+            raise DDOIPreConditionFailed()
+        
+        args_diff = cls._diff_args(initial_args, args)
 
-        cls.perform(args, logger, cfg)
-        args_diff = cls._diff_args(args, initial_args)
         if args_diff:
-            raise DDOIArgumentsChangedException(
-                f"Arguments changed after executing perform: {args_diff}")
+            logger.error(f"Args changed after pre-condition!")
+            raise DDOIArgumentsChangedException(f"Args changed after pre-condition")
 
-        pst = cls.post_condition(args, logger, cfg)
-        args_diff = cls._diff_args(args, initial_args)
+
+        ###########
+        # EXECUTE #
+        ###########
+        
+        try:
+            return_value = cls.perform(args, logger, cfg)
+        except Exception as e:
+            logger.error(f"Exception encountered in perform: {e}")
+            logger.error(e.with_traceback(), exc_info=True)
+            raise DDOIPerformFailed()
+        
+        args_diff = cls._diff_args(initial_args, args)
+
         if args_diff:
-            raise DDOIArgumentsChangedException(
-                f"Arguments changed after executing post-condition: {args_diff}")
-        return pst
+            logger.error(f"Args changed after perform!")
+            raise DDOIArgumentsChangedException(f"Args changed after pre-condition")
+        
+
+        ##################
+        # POST CONDITION #
+        ##################
+
+        try:
+            cls.post_condition(args, logger, cfg)
+        except Exception as e:
+            logger.error(f"Exception encountered in post-condition: {e}")
+            logger.error(e.with_traceback(), exc_info=True)
+            raise DDOIPostConditionFailed()
+        
+        args_diff = cls._diff_args(initial_args, args)
+
+        if args_diff:
+            logger.error(f"Args changed after post-condition!")
+            raise DDOIArgumentsChangedException(f"Args changed after pre-condition")
+        
+        return return_value
+    
+        # # Check the pre-condition
+        # if not cls.pre_condition(args, logger, cfg):
+        #     return False
+
+        # # Make sure that the pre-condition did not alter the arguments
+        # args_diff = cls._diff_args(args, initial_args)
+        # if args_diff:
+        #     raise DDOIArgumentsChangedException(
+        #         f"Arguments changed after executing pre-condition: {args_diff}")
+
+        # cls.perform(args, logger, cfg)
+        # args_diff = cls._diff_args(args, initial_args)
+        # if args_diff:
+        #     raise DDOIArgumentsChangedException(
+        #         f"Arguments changed after executing perform: {args_diff}")
+
+        # pst = cls.post_condition(args, logger, cfg)
+        # args_diff = cls._diff_args(args, initial_args)
+        # if args_diff:
+        #     raise DDOIArgumentsChangedException(
+        #         f"Arguments changed after executing post-condition: {args_diff}")
+        # return pst
 
     @classmethod
     def pre_condition(cls, args, logger, cfg):

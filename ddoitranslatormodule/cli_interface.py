@@ -191,7 +191,8 @@ def create_logger():
     utnow = datetime.utcnow()
     date = utnow-timedelta(days=1)
     date_str = date.strftime('%Y%b%d').lower()
-    logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
+    logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
+    # logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
     if logdir.exists() is False:
         logdir.mkdir(parents=True)
     LogFileName = logdir / 'cli_interface.log'
@@ -290,7 +291,7 @@ def main(table_loc, args):
         final_args = function_args[1:]
         for arg_tup in args:
             final_args.insert(arg_tup[0], str(arg_tup[1]))
-
+        parsed_func_args = {}
         # If there is an arguments file, load it
         if parsed_args.file:
             logger.debug(f"Found an input file: {parsed_args.file}")
@@ -321,21 +322,21 @@ def main(table_loc, args):
                     "Filetype is not supported. I understand [.yml, .json]")
                 return
         
-        else: # If there isn't a file, parse from the command line
             
-            # Build an ArgumentParser and attach the function's arguments
-            parser = ArgumentParser(add_help=False)
-            logger.debug(f"Adding CLI args to parser")
-            parser = function.add_cmdline_args(parser)
-            logger.debug("Parsing function arguments...")
-            try:
-                parsed_func_args = parser.parse_args(final_args)
-                logger.debug("Parsed.")
-            except ArgumentError as e:
-                logger.error("Failed to parse arguments!")
-                logger.error(e)
-                logger.error(traceback.format_exc())
-                sys.exit(1)
+        # Build an ArgumentParser and attach the function's arguments
+        parser = ArgumentParser(add_help=False)
+        logger.debug(f"Adding CLI args to parser")
+        parser = function.add_cmdline_args(parser)
+        logger.debug("Parsing function arguments...")
+        try:
+            cli_parsed_func_args = parser.parse_args(final_args)
+            parsed_func_args.update(vars(cli_parsed_func_args))
+            logger.debug("Parsed.")
+        except ArgumentError as e:
+            logger.error("Failed to parse arguments!")
+            logger.error(e)
+            logger.error(traceback.format_exc())
+            sys.exit(1)
 
 
         if parsed_args.dry_run:

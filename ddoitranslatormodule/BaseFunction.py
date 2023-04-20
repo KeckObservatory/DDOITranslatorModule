@@ -3,7 +3,7 @@ from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import *
 from logging import getLogger
 from argparse import Namespace, ArgumentTypeError
 import configparser
-
+import traceback
 import copy
 
 
@@ -77,8 +77,7 @@ class TranslatorModuleFunction:
         try:
             cls.pre_condition(args, logger, cfg)
         except Exception as e:
-            logger.error(f"Exception encountered in pre-condition: {e}")
-            logger.error(e.with_traceback(), exc_info=True)
+            logger.error(f"Exception encountered in pre-condition: {e}", exc_info=True)
             raise DDOIPreConditionFailed()
         
         args_diff = cls._diff_args(initial_args, args)
@@ -95,8 +94,7 @@ class TranslatorModuleFunction:
         try:
             return_value = cls.perform(args, logger, cfg)
         except Exception as e:
-            logger.error(f"Exception encountered in perform: {e}")
-            logger.error(e.with_traceback(), exc_info=True)
+            logger.error(f"Exception encountered in perform: {e}", exc_info=True)
             raise DDOIPerformFailed()
         
         args_diff = cls._diff_args(initial_args, args)
@@ -114,7 +112,7 @@ class TranslatorModuleFunction:
             cls.post_condition(args, logger, cfg)
         except Exception as e:
             logger.error(f"Exception encountered in post-condition: {e}")
-            logger.error(e.with_traceback(), exc_info=True)
+            logger.error(traceback.format_exc(), exc_info=True)
             raise DDOIPostConditionFailed()
         
         args_diff = cls._diff_args(initial_args, args)

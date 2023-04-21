@@ -101,7 +101,7 @@ class TranslatorModuleFunction:
 
         if args_diff:
             logger.error(f"Args changed after perform!")
-            raise DDOIArgumentsChangedException(f"Args changed after pre-condition")
+            raise DDOIArgumentsChangedException(f"Args changed after perform")
         
 
         ##################
@@ -119,7 +119,7 @@ class TranslatorModuleFunction:
 
         if args_diff:
             logger.error(f"Args changed after post-condition!")
-            raise DDOIArgumentsChangedException(f"Args changed after pre-condition")
+            raise DDOIArgumentsChangedException(f"Args changed after post-condition")
         
         return return_value
     

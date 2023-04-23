@@ -84,7 +84,9 @@ class TranslatorModuleFunction:
         args_diff = cls._diff_args(initial_args, args)
 
         if args_diff:
-            logger.warning(f"Args changed after pre-condition: {args_diff}")
+            logger.debug(f"Args changed after pre-condition")
+            logger.debug(f"Before: {initial_args}")
+            logger.debug(f"After: {args}")
 #             raise DDOIArgumentsChangedException(f"Args changed after pre-condition")
 
 
@@ -102,7 +104,9 @@ class TranslatorModuleFunction:
         args_diff = cls._diff_args(initial_args, args)
 
         if args_diff:
-            logger.warning(f"Args changed after perform: {args_diff}")
+            logger.debug(f"Args changed after perform")
+            logger.debug(f"Before: {initial_args}")
+            logger.debug(f"After: {args}")
 #             raise DDOIArgumentsChangedException(f"Args changed after perform")
         
 
@@ -120,7 +124,9 @@ class TranslatorModuleFunction:
         args_diff = cls._diff_args(initial_args, args)
 
         if args_diff:
-            logger.warning(f"Args changed after post-condition: {args_diff}")
+            logger.debug(f"Args changed after post-condition")
+            logger.debug(f"Before: {initial_args}")
+            logger.debug(f"After: {args}")
 #             raise DDOIArgumentsChangedException(f"Args changed after post-condition")
         
         return return_value

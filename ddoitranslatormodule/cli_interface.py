@@ -327,22 +327,24 @@ def main(table_loc, args):
                 logger.error(
                     "Filetype is not supported. I understand [.yml, .json]")
                 return
+        else:
+            parsed_func_args = {}
         
-        else: # If there isn't a file, parse from the command line
-            
-            # Build an ArgumentParser and attach the function's arguments
-            parser = ArgumentParser(add_help=False)
-            logger.debug(f"Adding CLI args to parser")
-            parser = function.add_cmdline_args(parser)
-            logger.debug("Parsing function arguments...")
-            try:
-                parsed_func_args = parser.parse_args(final_args)
-                logger.debug("Parsed.")
-            except ArgumentError as e:
-                logger.error("Failed to parse arguments!")
-                logger.error(e)
-                logger.error(traceback.format_exc())
-                sys.exit(1)
+        # Build an ArgumentParser and attach the function's arguments
+        parser = ArgumentParser(add_help=False)
+        logger.debug(f"Adding CLI args to parser")
+        parser = function.add_cmdline_args(parser)
+        logger.debug("Parsing function arguments...")
+        try:
+            print(type(parsed_func_args))
+            print(type(vars(parser.parse_args(final_args))))
+            parsed_func_args.update(vars(parser.parse_args(final_args)))
+            logger.debug("Parsed.")
+        except ArgumentError as e:
+            logger.error("Failed to parse arguments!")
+            logger.error(e)
+            logger.error(traceback.format_exc())
+            sys.exit(1)
 
 
         if parsed_args.dry_run:

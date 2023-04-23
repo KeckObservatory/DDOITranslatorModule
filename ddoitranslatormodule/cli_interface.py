@@ -1,4 +1,5 @@
 import os
+import socket
 import sys
 import importlib
 import traceback
@@ -191,7 +192,13 @@ def create_logger():
     utnow = datetime.utcnow()
     date = utnow-timedelta(days=1)
     date_str = date.strftime('%Y%b%d').lower()
-    logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
+
+    hostname = socket.gethostname()
+    if hostname.lower() in ['kpf', 'vm-kpf', 'kpffiuserver', 'kpfserver']:
+        logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
+    elif hostname.lower() in ['vm-ddoiserverbuild', 'vm-ddoiserver']:
+        logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
+
     if logdir.exists() is False:
         logdir.mkdir(parents=True)
     LogFileName = logdir / 'cli_interface.log'

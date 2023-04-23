@@ -336,8 +336,6 @@ def main(table_loc, args):
         parser = function.add_cmdline_args(parser)
         logger.debug("Parsing function arguments...")
         try:
-            print(type(parsed_func_args))
-            print(type(vars(parser.parse_args(final_args))))
             parsed_func_args.update(vars(parser.parse_args(final_args)))
             logger.debug("Parsed.")
         except ArgumentError as e:

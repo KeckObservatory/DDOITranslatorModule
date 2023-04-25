@@ -297,7 +297,7 @@ def main(table_loc, args):
         final_args = function_args[1:]
         for arg_tup in args:
             final_args.insert(arg_tup[0], str(arg_tup[1]))
-
+        parsed_func_args = {} # Empty starting dict
         # If there is an arguments file, load it
         if parsed_args.file:
             logger.debug(f"Found an input file: {parsed_args.file}")
@@ -336,7 +336,10 @@ def main(table_loc, args):
         parser = function.add_cmdline_args(parser)
         logger.debug("Parsing function arguments...")
         try:
+            # Append these parsed args onto whatever was (or wasn't)
+            # found in the input file (i.e. if -f was used)
             parsed_func_args.update(vars(parser.parse_args(final_args)))
+
             logger.debug("Parsed.")
         except ArgumentError as e:
             logger.error("Failed to parse arguments!")

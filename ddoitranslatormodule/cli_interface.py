@@ -1,4 +1,5 @@
 import os
+import socket
 import sys
 import importlib
 import traceback
@@ -191,8 +192,13 @@ def create_logger():
     utnow = datetime.utcnow()
     date = utnow-timedelta(days=1)
     date_str = date.strftime('%Y%b%d').lower()
-    logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
-    # logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
+
+    hostname = socket.gethostname()
+    if hostname.lower() in ['kpf', 'vm-kpf', 'kpffiuserver', 'kpfserver']:
+        logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
+    elif hostname.lower() in ['vm-ddoiserverbuild', 'vm-ddoiserver']:
+        logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
+
     if logdir.exists() is False:
         logdir.mkdir(parents=True)
     LogFileName = logdir / 'cli_interface.log'
@@ -321,8 +327,9 @@ def main(table_loc, args):
                 logger.error(
                     "Filetype is not supported. I understand [.yml, .json]")
                 return
+        else:
+            parsed_func_args = {}
         
-            
         # Build an ArgumentParser and attach the function's arguments
         parser = ArgumentParser(add_help=False)
         logger.debug(f"Adding CLI args to parser")
@@ -331,8 +338,8 @@ def main(table_loc, args):
         try:
             # Append these parsed args onto whatever was (or wasn't)
             # found in the input file (i.e. if -f was used)
-            cli_parsed_func_args = parser.parse_args(final_args)
-            parsed_func_args.update(vars(cli_parsed_func_args))
+            parsed_func_args.update(vars(parser.parse_args(final_args)))
+
             logger.debug("Parsed.")
         except ArgumentError as e:
             logger.error("Failed to parse arguments!")

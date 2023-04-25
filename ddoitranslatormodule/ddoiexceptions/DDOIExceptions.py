@@ -1,3 +1,12 @@
+class DDOIPreConditionFailed(Exception):
+    pass
+
+class DDOIPerformFailed(Exception):
+    pass
+
+class DDOIPostConditionFailed(Exception):
+    pass
+
 class DDOIArgumentsChangedException(Exception):
     pass
 

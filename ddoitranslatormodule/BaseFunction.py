@@ -1,9 +1,9 @@
-from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOIArgumentsChangedException, DDOIInvalidArguments, DDOIConfigFileException, DDOIConfigException, DDOIKTLTimeOut
+from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import *
 
 from logging import getLogger
 from argparse import Namespace, ArgumentTypeError
 import configparser
-
+import traceback
 import copy
 
 
@@ -70,28 +70,89 @@ class TranslatorModuleFunction:
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
 
-        # Check the pre-condition
-        if not cls.pre_condition(args, logger, cfg):
-            return False
 
-        # Make sure that the pre-condition did not alter the arguments
-        args_diff = cls._diff_args(args, initial_args)
-        if args_diff:
-            raise DDOIArgumentsChangedException(
-                f"Arguments changed after executing pre-condition: {args_diff}")
+        #################
+        # PRE CONDITION #
+        #################
+        try:
+            cls.pre_condition(args, logger, cfg)
+        except Exception as e:
+            logger.error(f"Exception encountered in pre-condition: {e}", exc_info=True)
+            raise DDOIPreConditionFailed()
+        
+        args_diff = cls._diff_args(initial_args, args)
 
-        cls.perform(args, logger, cfg)
-        args_diff = cls._diff_args(args, initial_args)
         if args_diff:
-            raise DDOIArgumentsChangedException(
-                f"Arguments changed after executing perform: {args_diff}")
+            logger.debug(f"Args changed after pre-condition")
+            logger.debug(f"Before: {initial_args}")
+            logger.debug(f"After: {args}")
+#             raise DDOIArgumentsChangedException(f"Args changed after pre-condition")
 
-        pst = cls.post_condition(args, logger, cfg)
-        args_diff = cls._diff_args(args, initial_args)
+
+        ###########
+        # EXECUTE #
+        ###########
+        
+        try:
+            return_value = cls.perform(args, logger, cfg)
+        except Exception as e:
+            logger.error(f"Exception encountered in perform: {e}", exc_info=True)
+            raise DDOIPerformFailed()
+        
+        args_diff = cls._diff_args(initial_args, args)
+
         if args_diff:
-            raise DDOIArgumentsChangedException(
-                f"Arguments changed after executing post-condition: {args_diff}")
-        return pst
+            logger.debug(f"Args changed after perform")
+            logger.debug(f"Before: {initial_args}")
+            logger.debug(f"After: {args}")
+#             raise DDOIArgumentsChangedException(f"Args changed after perform")
+
+        
+
+        ##################
+        # POST CONDITION #
+        ##################
+
+        try:
+            cls.post_condition(args, logger, cfg)
+        except Exception as e:
+            logger.error(f"Exception encountered in post-condition: {e}")
+            logger.error(traceback.format_exc(), exc_info=True)
+            raise DDOIPostConditionFailed()
+        
+        args_diff = cls._diff_args(initial_args, args)
+
+        if args_diff:
+            logger.debug(f"Args changed after post-condition")
+            logger.debug(f"Before: {initial_args}")
+            logger.debug(f"After: {args}")
+#             raise DDOIArgumentsChangedException(f"Args changed after post-condition")
+
+        
+        return return_value
+    
+        # # Check the pre-condition
+        # if not cls.pre_condition(args, logger, cfg):
+        #     return False
+
+        # # Make sure that the pre-condition did not alter the arguments
+        # args_diff = cls._diff_args(args, initial_args)
+        # if args_diff:
+        #     raise DDOIArgumentsChangedException(
+        #         f"Arguments changed after executing pre-condition: {args_diff}")
+
+        # cls.perform(args, logger, cfg)
+        # args_diff = cls._diff_args(args, initial_args)
+        # if args_diff:
+        #     raise DDOIArgumentsChangedException(
+        #         f"Arguments changed after executing perform: {args_diff}")
+
+        # pst = cls.post_condition(args, logger, cfg)
+        # args_diff = cls._diff_args(args, initial_args)
+        # if args_diff:
+        #     raise DDOIArgumentsChangedException(
+        #         f"Arguments changed after executing post-condition: {args_diff}")
+        # return pst
 
     @classmethod
     def pre_condition(cls, args, logger, cfg):
@@ -128,9 +189,25 @@ class TranslatorModuleFunction:
 
     @staticmethod
     def _diff_args(args1, args2):
+        """Compares two flat dictionaries to determine if any values from dict1
+        have been changed. Any keys present in dict2 that do not exist in dict1
+        are ignored
 
-        # Deep check if args1 == args2. This code may not be sufficient
-        # return args1 != args2
+        Parameters
+        ----------
+        args1 : dict
+            Primary dict to inspect
+        args2 : dict
+            Secondary dict to inspect
+
+        Returns
+        -------
+        bool
+            True if there is a difference, False otherwise
+        """    
+        for key in args1.keys():
+            if args1[key] != args2[key]:
+                return True
         return False
 
     """
@@ -160,7 +237,7 @@ class TranslatorModuleFunction:
         elif param_type != str:
             raise DDOIConfigFileException(param_type, configparser.ConfigParser)
 
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(inline_comment_prefixes=(';','#',))
         config.read(config_files)
 
         return config
@@ -369,7 +446,9 @@ class TranslatorModuleFunction:
             dict_to_update.update(dic)
 
         update_dict(in_args, OB, ['target', 'parameters'])
+        update_dict(in_args, OB, ['metadata'])
         update_dict(in_args, OB, ['acquisition', 'parameters'])
+        update_dict(in_args, OB, ['acquisition', 'metadata'])
         update_dict(in_args, OB, ['common_parameters', 'detector_parameters'])
         update_dict(in_args, OB, ['common_parameters', 'instrument_parameters'])
         update_dict(in_args, OB, ['common_parameters', 'tcs_parameters'])
@@ -378,12 +457,15 @@ class TranslatorModuleFunction:
         for observation in OB['observations']:
             if observation['metadata']['sequence_number'] == sequence_number:
                 in_args.update(observation['parameters'])
+                in_args.update(observation['metadata'])
 
         # Map the arguments to their new keys using the config
         out_args = {}
 
         for key in in_args:
-            newkey = config[key]
-            out_args[newkey] = in_args[key]
-        
+            try:
+                newkey = config['ob_keys'][key]
+                out_args[newkey] = in_args[key]
+            except KeyError:
+                out_args[key] = in_args[key]
         return out_args

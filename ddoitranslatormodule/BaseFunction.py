@@ -65,8 +65,13 @@ class TranslatorModuleFunction:
             logger = getLogger("")
 
         # read the config file
-        cfg = cls._load_config(cls, cfg, args=args)
-
+        if isinstance(cfg, str):
+            logger.info(f"Loading config from string {str}")
+            cfg = cls._load_config(cls, cfg, args=args)
+        elif cfg is None:
+            cfg_loc = cls._cfg_location(cls, args=args)[0]
+            logger.info(f"Loading config from default location: {cfg_loc}")
+            cfg = cls._load_config(cls, cfg_loc, args=args) 
         # Store a copy of the initial args
         initial_args = copy.deepcopy(args)
 
@@ -236,6 +241,8 @@ class TranslatorModuleFunction:
             return cfg
         elif param_type != str:
             raise DDOIConfigFileException(param_type, configparser.ConfigParser)
+        elif isinstance(cfg, str):
+            config_files = [cfg]
 
         config = configparser.ConfigParser(inline_comment_prefixes=(';','#',))
         config.read(config_files)

@@ -194,6 +194,8 @@ def create_logger():
     date_str = date.strftime('%Y%b%d').lower()
 
     hostname = socket.gethostname()
+    if hostname[-16:] == '.keck.hawaii.edu':
+        hostname = hostname[:-16]
     if hostname.lower() in ['kpf', 'vm-kpf', 'kpffiuserver', 'kpfserver']:
         logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
     elif hostname.lower() in ['vm-ddoiserverbuild', 'vm-ddoiserver']:

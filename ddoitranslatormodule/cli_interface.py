@@ -200,12 +200,17 @@ def create_logger():
         logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
 
     if logdir.exists() is False:
-        logdir.mkdir(parents=True)
+        logdir.mkdir(mode=0o777, parents=True)
     LogFileName = logdir / 'cli_interface.log'
     LogFileHandler = logging.FileHandler(LogFileName)
     LogFileHandler.setLevel(logging.DEBUG)
     LogFileHandler.setFormatter(LogFormat)
     log.addHandler(LogFileHandler)
+    # Try to change permissions in case they are bad
+    try:
+        os.chmod(LogFileName, 0o666)
+    except OSError:
+        pass
     return log
 
 def main(table_loc, args):

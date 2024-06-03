@@ -215,21 +215,20 @@ def create_logger():
         logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
     if logdir.exists() is False:
         logdir.mkdir(mode=0o777, parents=True)
-
-    # Try to examine permissions on log directory
-    logdir_permissions = oct(os.stat(logdir).st_mode)[-3:]
-    if logdir_permissions != '777':
-        try:
-            msg = [f'Failed to set permissions:',
-                   f'{logdir}',
-                   f'Permissions: {logdir_permissions}']
-            send_email('\n'.join(msg),
-                       to='jwalawender@keck.hawaii.edu',
-                       frm='kpf_info@keck.hawaii.edu',
-                       subj='Permissions for logdir are bad')
-        except Exception as email_err:
-            log.error(f'Sending email failed')
-            log.error(email_err)
+        # Try to examine permissions on log directory
+        logdir_permissions = oct(os.stat(logdir).st_mode)[-3:]
+        if logdir_permissions != '777':
+            try:
+                msg = [f'Failed to create logdir with proper permissions:',
+                       f'{logdir}',
+                       f'Permissions: {logdir_permissions}']
+                send_email('\n'.join(msg),
+                           to='jwalawender@keck.hawaii.edu',
+                           frm='kpf_info@keck.hawaii.edu',
+                           subj='Permissions for logdir are bad')
+            except Exception as email_err:
+                log.error(f'Sending email failed')
+                log.error(email_err)
 
     LogFileName = logdir / 'cli_interface.log'
     LogFileHandler = logging.FileHandler(LogFileName)

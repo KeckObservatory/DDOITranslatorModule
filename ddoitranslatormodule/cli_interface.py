@@ -17,20 +17,6 @@ from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOITranslatorMod
 from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
 
 
-def send_email(email_contents,
-               to='kpf_info@keck.hawaii.edu',
-               frm='kpf_info@keck.hawaii.edu',
-               subj='Alert',
-               ):
-    msg = MIMEText(email_contents)
-    msg['To'] = to
-    msg['From'] = frm
-    msg['Subject'] = subj
-    s = smtplib.SMTP('relay.keck.hawaii.edu')
-    s.send_message(msg)
-    s.quit()
-
-
 class LinkingTable():
     """Class storing the contents of a linking table
     """
@@ -215,41 +201,26 @@ def create_logger():
         logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
     if logdir.exists() is False:
         logdir.mkdir(mode=0o777, parents=True)
-        # Try to examine permissions on log directory
-        logdir_permissions = oct(os.stat(logdir).st_mode)[-3:]
-        if logdir_permissions != '777':
-            try:
-                msg = [f'Failed to create logdir with proper permissions:',
-                       f'{logdir}',
-                       f'Permissions: {logdir_permissions}']
-                send_email('\n'.join(msg),
-                           to='jwalawender@keck.hawaii.edu',
-                           frm='kpf_info@keck.hawaii.edu',
-                           subj='Permissions for logdir are bad')
-            except Exception as email_err:
-                log.error(f'Sending email failed')
-                log.error(email_err)
-
+        # Try to set permissions on the date directory
+        try:
+            os.chmod(logdir.parent, 0o777)
+        except OSError as e:
+            pass
+        # Try to set permissions on the cli_logs directory
+        try:
+            os.chmod(logdir, 0o777)
+        except OSError as e:
+            pass
     LogFileName = logdir / 'cli_interface.log'
     LogFileHandler = logging.FileHandler(LogFileName)
     LogFileHandler.setLevel(logging.DEBUG)
     LogFileHandler.setFormatter(LogFormat)
     log.addHandler(LogFileHandler)
-
     # Try to change permissions on file in case they are bad
     try:
         os.chmod(LogFileName, 0o666)
     except OSError as e:
-        try:
-            msg = [f'{type(e)}',
-                   f'{traceback.format_exc()}']
-            send_email('\n'.join(msg),
-                       to='jwalawender@keck.hawaii.edu',
-                       frm='kpf_info@keck.hawaii.edu',
-                       subj=f'chmod for {LogFileName} failed')
-        except Exception as email_err:
-            log.error(f'Sending email failed')
-            log.error(email_err)
+        pass
 
     return log
 

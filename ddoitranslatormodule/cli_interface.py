@@ -202,11 +202,13 @@ def create_logger():
     if logdir.exists() is False:
         logdir.mkdir(mode=0o777, parents=True)
         # Try to set permissions on the date directory
+        # necessary because the mode input to mkdir is modified by umask
         try:
             os.chmod(logdir.parent, 0o777)
         except OSError as e:
             pass
         # Try to set permissions on the cli_logs directory
+        # necessary because the mode input to mkdir is modified by umask
         try:
             os.chmod(logdir, 0o777)
         except OSError as e:

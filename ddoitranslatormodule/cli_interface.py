@@ -243,7 +243,7 @@ def create_logger():
     except OSError as e:
         try:
             msg = [f'{type(e)}',
-                   f'{traceback_text}']
+                   f'{traceback.format_exc()}']
             send_email('\n'.join(msg),
                        to='jwalawender@keck.hawaii.edu',
                        frm='kpf_info@keck.hawaii.edu',

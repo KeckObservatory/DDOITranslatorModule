@@ -9,11 +9,26 @@ from argparse import ArgumentParser, ArgumentError
 from typing import Dict, List, Tuple
 import logging
 from datetime import datetime, timedelta
-
+import smtplib
+from email.mime.text import MIMEText
 import yaml
 
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOITranslatorModuleNotFoundException
 from ddoitranslatormodule.BaseFunction import TranslatorModuleFunction
+
+
+def send_email(email_contents,
+               to='kpf_info@keck.hawaii.edu',
+               frm='kpf_info@keck.hawaii.edu',
+               subj='Alert',
+               ):
+    msg = MIMEText(email_contents)
+    msg['To'] = to
+    msg['From'] = from
+    msg['Subject'] = subj
+    s = smtplib.SMTP('relay.keck.hawaii.edu')
+    s.send_message(msg)
+    s.quit()
 
 
 class LinkingTable():
@@ -198,19 +213,45 @@ def create_logger():
         logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
     elif hostname.lower() in ['vm-ddoiserverbuild', 'vm-ddoiserver']:
         logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
-
     if logdir.exists() is False:
         logdir.mkdir(mode=0o777, parents=True)
+
+    # Try to examine permissions on log directory
+    logdir_permissions = oct(os.stat(logdir).st_mode)[-3:]
+    if logdir_permissions != '777':
+        try:
+            msg = [f'Failed to set permissions:',
+                   f'{logdir}',
+                   f'Permissions: {logdir_permissions}']
+            send_email('\n'.join(msg),
+                       to='jwalawender@keck.hawaii.edu',
+                       frm='kpf_info@keck.hawaii.edu',
+                       subj='Permissions for logdir are bad')
+        except Exception as email_err:
+            log.error(f'Sending email failed')
+            log.error(email_err)
+
     LogFileName = logdir / 'cli_interface.log'
     LogFileHandler = logging.FileHandler(LogFileName)
     LogFileHandler.setLevel(logging.DEBUG)
     LogFileHandler.setFormatter(LogFormat)
     log.addHandler(LogFileHandler)
-    # Try to change permissions in case they are bad
+
+    # Try to change permissions on file in case they are bad
     try:
         os.chmod(LogFileName, 0o666)
     except OSError:
-        pass
+        try:
+            msg = [f'{type(e)}',
+                   f'{traceback_text}']
+            send_email('\n'.join(msg),
+                       to='jwalawender@keck.hawaii.edu',
+                       frm='kpf_info@keck.hawaii.edu',
+                       subj=f'chmod for {LogFileName} failed')
+        except Exception as email_err:
+            log.error(f'Sending email failed')
+            log.error(email_err)
+
     return log
 
 def main(table_loc, args):

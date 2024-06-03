@@ -240,7 +240,7 @@ def create_logger():
     # Try to change permissions on file in case they are bad
     try:
         os.chmod(LogFileName, 0o666)
-    except OSError:
+    except OSError as e:
         try:
             msg = [f'{type(e)}',
                    f'{traceback_text}']

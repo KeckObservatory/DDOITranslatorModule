@@ -24,7 +24,7 @@ def send_email(email_contents,
                ):
     msg = MIMEText(email_contents)
     msg['To'] = to
-    msg['From'] = from
+    msg['From'] = frm
     msg['Subject'] = subj
     s = smtplib.SMTP('relay.keck.hawaii.edu')
     s.send_message(msg)

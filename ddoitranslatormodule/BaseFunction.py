@@ -1,6 +1,7 @@
 from argparse import Namespace, ArgumentTypeError
 import configparser
 import traceback
+import os
 
 
 class TranslatorModuleFunction:
@@ -9,7 +10,7 @@ class TranslatorModuleFunction:
     """
 
     @classmethod
-    def execute(cls, args, kwargs, cfg=None):
+    def execute(cls, *args, **kwargs):
         """Carries out this function in its entirety (pre and post conditions
            included)
 
@@ -21,7 +22,7 @@ class TranslatorModuleFunction:
             File path to the config that should be used, by default None
         """
         # read the config file
-        cfg = cls._load_config(cls, cfg, args=args)
+        cfg = cls._load_config(cls)
 
         #################
         # PRE CONDITION #
@@ -54,17 +55,17 @@ class TranslatorModuleFunction:
         return return_value
 
     @classmethod
-    def pre_condition(cls, args, kwargs, cfg=cfg):
+    def pre_condition(cls, args, kwargs):
       # pre-checks go here
       raise NotImplementedError()
 
     @classmethod
-    def perform(cls, args, kwargs, cfg=cfg):
+    def perform(cls, args, kwargs):
         # This is where the bulk of instrument code lives
         raise NotImplementedError()
 
     @classmethod
-    def post_condition(cls, args, kwargs, cfg=cfg):
+    def post_condition(cls, args, kwargs):
         # post-checks go here
         raise NotImplementedError()
 
@@ -80,7 +81,7 @@ class TranslatorModuleFunction:
 
         @return: <class 'configparser.ConfigParser'> the config file parser.
         """
-        config_files = self._cfg_location()
+        config_files = cls._cfg_location(cls)
         config = configparser.ConfigParser(inline_comment_prefixes=(';','#',))
         config.read(config_files)
 
@@ -95,7 +96,7 @@ class TranslatorModuleFunction:
         :return: <list> fullpath + filename of default configuration
         """
         cfg_path_base = os.path.dirname(os.path.abspath(__file__))
-        cfg = f"{cfg_path_base}/{self.name}_inst_config.ini"
+        cfg = f"{cfg_path_base}/{cls.name}_inst_config.ini"
         config_files = [cfg]
         return config_files
 
@@ -108,7 +109,7 @@ class TranslatorModuleFunction:
         result = Function.execute(args)
     """
     @classmethod
-    def add_cmdline_args(cls, parser, cfg=None):
+    def add_cmdline_args(cls, parser):
         """
         The arguments to add to the command line interface.
 
@@ -123,65 +124,4 @@ class TranslatorModuleFunction:
         parser.add_argument('-h', '--help', action='help', default='==SUPPRESS==',
                             help='show this help message and exit')
 
-        return parser
-
-    @staticmethod
-    def _add_args(parser, args_to_add, print_only=False):
-        """
-        Add the argparse arguments.
-
-        :param parser: <configparser> The parser object
-        :param args_to_add: OrderedDict the arguments to add.
-            keywords:
-                'help' - <str> the help string to add, required
-                'type' - <python type>, the argument type,  required
-                'req' - <bool> True if the argument is required,  optional
-                'kw_arg' - <bool> True for keyword arguments, optional
-        :param print_only: <bool> True if add the print_only option
-
-        :return: <configparser> The parser object
-        """
-        # check to see if print_only is true,  then do not add other arguments.
-        if print_only:
-            parser.add_argument('--print_only', action='store_true', default=False)
-            args = parser.parse_known_args()
-            if args[0].print_only:
-                return parser
-
-        for arg_name, arg_info in args_to_add.items():
-            # add keyword arguments
-            if 'kw_arg' in arg_info and arg_info['kw_arg']:
-                parser.add_argument(f'--{arg_name}', type=arg_info['type'],
-                                    required=arg_info['req'], help=arg_info['help'])
-                continue
-
-            # add positional arguments
-            parser.add_argument(arg_name, type=arg_info['type'], help=arg_info['help'])
-
-        return parser
-
-    @staticmethod
-    def _add_bool_arg(parser, name, msg, default=False):
-        """
-
-        :param parser: <configparser> The parser object.
-        :param name: <str> the parameter name
-        :param msg: <str> the help message
-
-        :return: <configparser> The parser object.
-        """
-
-        def _str_to_bool(arg_val):
-            if isinstance(arg_val, bool):
-                return arg_val
-
-            if arg_val.lower() in ('yes', 'true', 't', 'y', '1'):
-                return True
-            elif arg_val.lower() in ('no', 'false', 'f', 'n', '0'):
-                return False
-            else:
-                raise ArgumentTypeError(f'Boolean value expected.')
-
-        parser.add_argument(f'--{name}', type=_str_to_bool, default=default,
-                            help=msg)
         return parser

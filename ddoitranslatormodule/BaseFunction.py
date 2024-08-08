@@ -10,6 +10,34 @@ class TranslatorModuleFunction:
     """
 
     @classmethod
+    def create_log(logdir='.'):
+        self.log = logging.getLogger(f'{self.name}Translator')
+        self.log.setLevel(logging.DEBUG)
+        ## Set up console output
+        LogConsoleHandler = logging.StreamHandler()
+        LogConsoleHandler.setLevel(logging.INFO)
+        LogFormat = logging.Formatter('%(asctime)s %(levelname)8s: %(message)s')
+        LogConsoleHandler.setFormatter(LogFormat)
+        self.log.addHandler(LogConsoleHandler)
+        ## Set up file output
+        logdir = Path(logdir)
+        if logdir.exists() is False:
+            logdir.mkdir(mode=0o777, parents=True)
+        LogFileName = logdir / f'{self.name}Translator_test.log'
+        LogFileHandler = RotatingFileHandler(LogFileName,
+                                             maxBytes=100*1024*1024, # 100 MB
+                                             backupCount=1000) # Keep old files
+        LogFileHandler.setLevel(logging.DEBUG)
+        LogFileHandler.setFormatter(LogFormat)
+        self.log.addHandler(LogFileHandler)
+        # Try to change permissions in case they are bad
+        try:
+            os.chmod(LogFileName, 0o666)
+        except OSError as e:
+            pass
+
+
+    @classmethod
     def execute(cls, *args, **kwargs):
         """Carries out this function in its entirety (pre and post conditions
            included)

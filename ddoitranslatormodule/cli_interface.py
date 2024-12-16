@@ -9,7 +9,8 @@ from argparse import ArgumentParser, ArgumentError
 from typing import Dict, List, Tuple
 import logging
 from datetime import datetime, timedelta
-
+import smtplib
+from email.mime.text import MIMEText
 import yaml
 
 from ddoitranslatormodule.ddoiexceptions.DDOIExceptions import DDOITranslatorModuleNotFoundException
@@ -198,14 +199,31 @@ def create_logger():
         logdir = Path(f"/s/sdata1701/KPFTranslator_logs/{date_str}/cli_logs")
     elif hostname.lower() in ['vm-ddoiserverbuild', 'vm-ddoiserver']:
         logdir = Path(f"/home/dsibld/logs/{date_str}/cli_logs")
-
     if logdir.exists() is False:
-        logdir.mkdir(parents=True)
+        logdir.mkdir(mode=0o777, parents=True)
+        # Try to set permissions on the date directory
+        # necessary because the mode input to mkdir is modified by umask
+        try:
+            os.chmod(logdir.parent, 0o777)
+        except OSError as e:
+            pass
+        # Try to set permissions on the cli_logs directory
+        # necessary because the mode input to mkdir is modified by umask
+        try:
+            os.chmod(logdir, 0o777)
+        except OSError as e:
+            pass
     LogFileName = logdir / 'cli_interface.log'
     LogFileHandler = logging.FileHandler(LogFileName)
     LogFileHandler.setLevel(logging.DEBUG)
     LogFileHandler.setFormatter(LogFormat)
     log.addHandler(LogFileHandler)
+    # Try to change permissions on file in case they are bad
+    try:
+        os.chmod(LogFileName, 0o666)
+    except OSError as e:
+        pass
+
     return log
 
 def main(table_loc, args):

@@ -1,4 +1,5 @@
 import os
+import stat
 import socket
 import sys
 import importlib
@@ -203,6 +204,23 @@ def create_logger():
 
     if logdir.exists() is False:
         logdir.mkdir(parents=True)
+    if not os.stat(logdir.parent).st_mode & stat.S_IWOTH:
+#         print(f"Fixing permissions on {logdir.parent}")
+        # Try to set permissions on the date directory
+        # necessary because the mode input to mkdir is modified by umask
+        try:
+            os.chmod(logdir.parent, 0o777)
+        except OSError as e:
+            pass
+    if not os.stat(logdir).st_mode & stat.S_IWOTH:
+#         print(f"Fixing permissions on {logdir}")
+        # Try to set permissions on the cli_logs directory
+        # necessary because the mode input to mkdir is modified by umask
+        try:
+            os.chmod(logdir, 0o777)
+        except OSError as e:
+            pass
+
     LogFileName = logdir / 'cli_interface.log'
     LogFileHandler = logging.FileHandler(LogFileName)
     LogFileHandler.setLevel(logging.DEBUG)
